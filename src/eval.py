@@ -30,7 +30,6 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
 
             activations = F.sigmoid(preds)
             predicted = (activations >= 0.5).float()
-            print(predicted)
 
             total_correct += (predicted == label).sum().item()
             total_samples += label.size(0)
