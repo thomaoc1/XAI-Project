@@ -1,16 +1,13 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import tqdm
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
-from torchvision.models import resnet50, ResNet50_Weights
 
 from src.classifier import DeepFakeClassifier
 
-
-def main(num_epochs: int, batch_size: int, nw: int, dev: str):
+def init_dataloader(batch_size, dev, nw):
     dataset = ImageFolder("dataset/deepfake-dataset/train", transform=transforms.ToTensor())
     loader = DataLoader(
         dataset,
@@ -19,6 +16,12 @@ def main(num_epochs: int, batch_size: int, nw: int, dev: str):
         shuffle=True,
         pin_memory=dev == 'cuda'
     )
+    return loader
+
+
+def train(num_epochs: int, batch_size: int, nw: int, dev: str):
+    loader = init_dataloader(batch_size, dev, nw)
+
     model = DeepFakeClassifier().to(dev)
     optimiser = torch.optim.Adam(model.parameters())
 
@@ -44,10 +47,11 @@ def main(num_epochs: int, batch_size: int, nw: int, dev: str):
 
     torch.save(model.state_dict(), 'model.pt')
 
+
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
-    main(
+    train(
         num_epochs=2,
         batch_size=64,
         nw=num_workers,
