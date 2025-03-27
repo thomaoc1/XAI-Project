@@ -48,7 +48,7 @@ if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
     main(
-        num_epochs=20,
+        num_epochs=2,
         batch_size=64,
         nw=num_workers,
         dev=device,
