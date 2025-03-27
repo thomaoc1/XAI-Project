@@ -18,4 +18,4 @@ dataset
         ├── fake
         └── real
 ```
-Verify using `python verify_dataset`
+Verify using `python verify_dataset.py`
