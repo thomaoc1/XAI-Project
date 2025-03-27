@@ -7,6 +7,8 @@ from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 from torchvision.models import resnet50, ResNet50_Weights
 
+from src.classifier import DeepFakeClassifier
+
 
 def main(num_epochs: int, batch_size: int, nw: int, dev: str):
     dataset = ImageFolder("dataset/deepfake-dataset/train", transform=transforms.ToTensor())
@@ -17,9 +19,7 @@ def main(num_epochs: int, batch_size: int, nw: int, dev: str):
         shuffle=True,
         pin_memory=dev == 'cuda'
     )
-    model = resnet50(weights=ResNet50_Weights.DEFAULT).to(dev)
-    model.fc = nn.Linear(model.fc.in_features, 1)
-
+    model = DeepFakeClassifier().to(dev)
     optimiser = torch.optim.Adam(model.parameters())
 
     for epoch in range(num_epochs):
