@@ -42,7 +42,7 @@ def main(num_epochs: int, batch_size: int, nw: int, dev: str):
         avg_loss = epoch_loss / len(loader)
         print(f"Epoch {epoch + 1}/{num_epochs} - Avg Loss: {avg_loss:.4f}")
 
-
+    torch.save(model.state_dict(), 'model.pt')
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
