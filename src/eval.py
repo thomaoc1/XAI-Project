@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
+import torchvision.transforms as transforms
 
 from src.classifier import DeepFakeClassifier
 
@@ -11,7 +12,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     model.load_state_dict(torch.load(path, map_location=dev, weights_only=True))
     model.eval()
 
-    dataset = ImageFolder("dataset/deepfake-dataset/validation")
+    dataset = ImageFolder("dataset/deepfake-dataset/validation", transform=transforms.ToTensor())
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=dev == 'cuda')
 
     for img, label in loader:
