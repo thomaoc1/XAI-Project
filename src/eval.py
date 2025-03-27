@@ -20,6 +20,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
         total_correct = 0
         total_samples = 0
         with torch.no_grad():
+            img, label = img.to(dev), label.float().to(dev)
             preds = model(img).squeeze(1)
             loss = F.binary_cross_entropy_with_logits(preds, label)
             total_loss += loss
