@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
+import tqdm
 
 from src.classifier import DeepFakeClassifier
 
@@ -15,11 +16,13 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     dataset = ImageFolder("dataset/deepfake-dataset/validation", transform=transforms.ToTensor())
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=dev == 'cuda')
 
-    for img, label in loader:
-        total_loss = 0.0
-        total_correct = 0
-        total_samples = 0
-        with torch.no_grad():
+    total_loss = 0.0
+    total_correct = 0
+    total_samples = 0
+
+    progress_bar = tqdm.tqdm(loader, desc="Evaluating", leave=False)
+    with torch.no_grad():
+        for img, label in progress_bar:
             img, label = img.to(dev), label.float().to(dev)
             preds = model(img).squeeze(1)
             loss = F.binary_cross_entropy_with_logits(preds, label)
@@ -27,6 +30,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
 
             activations = F.sigmoid(preds)
             predicted = (activations >= 0.5).float()
+            print(predicted)
 
             total_correct += (predicted == label).sum().item()
             total_samples += label.size(0)
