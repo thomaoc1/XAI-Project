@@ -4,7 +4,8 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 import tqdm
-from sklearn.metrics import f1_score
+from sklearn.metrics import classification_report
+
 
 from src.classifier import DeepFakeClassifier
 
@@ -40,13 +41,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
             all_labels.extend(label.cpu().numpy())
             all_preds.extend(predicted.cpu().numpy())
 
-    final_loss = total_loss / len(loader)
-    accuracy = total_correct / total_samples
-    f1 = f1_score(all_labels, all_preds)
-
-    print(f"Final Loss: {final_loss:.4f}")
-    print(f"Final Accuracy: {accuracy:.4f}")
-    print(f"F1 Score: {f1:.4f}")
+    print(classification_report(all_labels, all_preds, target_names=["Real", "Fake"]))
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
