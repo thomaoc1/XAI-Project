@@ -12,5 +12,6 @@ if __name__ == '__main__':
         plt.imshow(X.squeeze().permute(1, 2, 0))
         plt.show()
         break
+    print("Success!")
 
 
