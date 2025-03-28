@@ -41,7 +41,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
             all_labels.extend(label.cpu().numpy())
             all_preds.extend(predicted.cpu().numpy())
 
-    print(classification_report(all_labels, all_preds, target_names=["Real", "Fake"]))
+    print(classification_report(all_labels, all_preds, target_names=["Fake", "Real"]))
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
