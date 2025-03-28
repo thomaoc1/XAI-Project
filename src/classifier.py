@@ -9,4 +9,4 @@ class DeepFakeClassifier(nn.Module):
         self.backbone.fc = nn.Linear(self.backbone.fc.in_features, 1)
 
     def forward(self, x):
-        return self._backbone(x)
+        return self.backbone(x)
