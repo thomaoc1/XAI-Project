@@ -15,36 +15,36 @@ class GradCAM:
         self.model = model
         model.eval()
         self.target_layer = target_layer
-        self.hooks = []
-        self.activations = None
-        self.grads = None
+        self._hooks = []
+        self._activations = None
+        self._grads = None
 
     def _forward_hook(self, module, inp, out):
-        self.activations = out.squeeze()
+        self._activations = out.squeeze()
 
     def _backward_hook(self, module, grad_inp, grad_out):
-        self.grads = grad_out[0].squeeze()
+        self._grads = grad_out[0].squeeze()
 
     def __enter__(self):
-        self.hooks = [
+        self._hooks = [
             self.target_layer.register_forward_hook(self._forward_hook),
             self.target_layer.register_full_backward_hook(self._backward_hook)
         ]
         return self
 
     def __exit__(self, *args):
-        for hook in self.hooks:
+        for hook in self._hooks:
             hook.remove()
 
     def compute_heatmap(self, x: torch.Tensor, target_class: int):
-        if not len(self.hooks):
+        if not len(self._hooks):
             raise ValueError('Ensure that you are calling within GradCAM context to ensure hooks are initialised/freed')
 
-        output = model(x)
+        output = self.model(x)
         output[:, target_class].backward()
 
-        importance_weights = torch.mean(self.grads, dim=[1, 2])
-        scaled_activations = self.activations * importance_weights.unsqueeze(1).unsqueeze(2)
+        importance_weights = torch.mean(self._grads, dim=[1, 2])
+        scaled_activations = self._activations * importance_weights.unsqueeze(1).unsqueeze(2)
         L = F.relu(scaled_activations.sum(dim=0))
 
         original_height, original_width = x.shape[2], x.shape[3]
@@ -80,18 +80,20 @@ class GradCAM:
         plt.show()
 
 
-if __name__ == '__main__':
+def main():
     img = Image.open("dataset/deepfake-dataset/validation/real/aybgughjxh_56_0.png").convert("RGB")
     tensor_img = ToTensor()(img).unsqueeze(0)
 
     model = DeepFakeClassifier()
     model.load_state_dict(torch.load('model.pt', map_location='cpu', weights_only=True))
-    model.eval()
 
     with GradCAM(model, model.backbone.layer4) as G:
         heatmap, _ = G.compute_heatmap(tensor_img, 0)
-
     GradCAM.visualise_heatmap(tensor_img, heatmap)
+
+
+if __name__ == '__main__':
+    main()
 
 
 
