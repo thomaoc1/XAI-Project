@@ -44,10 +44,8 @@ class GradCAM:
         output[:, target_class].backward()
 
         importance_weights = torch.mean(self.grads, dim=[1, 2])
-        print(self.activations.shape, importance_weights.shape)
         scaled_activations = self.activations * importance_weights.unsqueeze(1).unsqueeze(2)
         L = F.relu(scaled_activations.sum(dim=0))
-        print(L.shape)
 
         original_height, original_width = x.shape[2], x.shape[3]
         upsampled_L = F.interpolate(
