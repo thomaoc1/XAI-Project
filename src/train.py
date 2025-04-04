@@ -33,7 +33,7 @@ def train(num_epochs: int, batch_size: int, nw: int, dev: str):
         progress_bar = tqdm.tqdm(loader, desc=f"Epoch {epoch + 1}/{num_epochs}", leave=False)
 
         for img, label in progress_bar:
-            img, label = img.to(dev), label.float().to(dev)
+            img, label = img.to(dev), label.to(dev)
 
             preds = model(img).squeeze(1)
             loss = F.cross_entropy(preds, label)
