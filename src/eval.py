@@ -27,13 +27,12 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     progress_bar = tqdm.tqdm(loader, desc="Evaluating", leave=False)
     with torch.no_grad():
         for img, label in progress_bar:
-            img, label = img.to(dev), label.float().to(dev)
-            preds = model(img).squeeze(1)
-            loss = F.binary_cross_entropy_with_logits(preds, label)
+            img, one_hot_label = img.to(dev),  F.one_hot(label.long(), 2).float().to(dev)
+            preds: torch.Tensor = model(img).squeeze(1)
+            loss = F.cross_entropy(preds, one_hot_label)
             total_loss += loss.item()
 
-            activations = torch.sigmoid(preds)
-            predicted = (activations >= 0.5).float()
+            predicted = preds.argmax(dim=1)
 
             total_correct += (predicted == label).sum().item()
             total_samples += label.size(0)

@@ -6,7 +6,7 @@ class DeepFakeClassifier(nn.Module):
     def __init__(self):
         super().__init__()
         self.backbone = resnet50(weights=ResNet50_Weights.DEFAULT)
-        self.backbone.fc = nn.Linear(self.backbone.fc.in_features, 1)
+        self.backbone.fc = nn.Linear(self.backbone.fc.in_features, 2)
 
     def forward(self, x):
         return self.backbone(x)
