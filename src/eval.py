@@ -27,9 +27,9 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     progress_bar = tqdm.tqdm(loader, desc="Evaluating", leave=False)
     with torch.no_grad():
         for img, label in progress_bar:
-            img, one_hot_label = img.to(dev),  F.one_hot(label.long(), 2).float().to(dev)
+            img, label = img.to(dev), label.to(dev)
             preds: torch.Tensor = model(img).squeeze(1)
-            loss = F.cross_entropy(preds, one_hot_label)
+            loss = F.cross_entropy(preds, label)
             total_loss += loss.item()
 
             predicted = preds.argmax(dim=1)
@@ -45,4 +45,4 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
-    evaluate("model.pt", batch_size=64, nw=num_workers, dev=device)
+    evaluate("new_model.pt", batch_size=64, nw=num_workers, dev=device)

@@ -48,14 +48,14 @@ def train(num_epochs: int, batch_size: int, nw: int, dev: str):
         avg_loss = epoch_loss / len(loader)
         print(f"Epoch {epoch + 1}/{num_epochs} - Avg Loss: {avg_loss:.4f}")
 
-    torch.save(model.state_dict(), 'model.pt')
+    torch.save(model.state_dict(), 'new_model.pt')
 
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
     train(
-        num_epochs=2,
+        num_epochs=5,
         batch_size=64,
         nw=num_workers,
         dev=device,
