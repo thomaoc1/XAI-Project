@@ -99,13 +99,13 @@ def main(model_path: str, batch_size: int, adv: bool = False):
                 all_ground_truths.append(batch_ground_truths)
                 all_labels.append(batch_labels)
             else:
-                batch_heatmaps = torch.tenor(grayscale_cam)
+                batch_heatmaps = torch.tensor(grayscale_cam)
 
             heatmaps.append(batch_heatmaps)
 
             metrics = {
                 'Vanilla Acc': (vanilla_preds == label.cpu()).float().mean().item()
-                }
+            }
 
             if adv:
                 metrics.update(
@@ -127,13 +127,15 @@ def main(model_path: str, batch_size: int, adv: bool = False):
         classification = torch.cat(all_vanilla_preds, dim=0)
         ground_truths = torch.cat(all_ground_truths, dim=0)
         adv_classification = torch.cat(all_adv_preds, dim=0)
-        obj = {
-            'heatmaps': heatmaps,
-            'labels': heatmap_labels,
-            'model_vanilla_preds': classification,
-            'ground_truth': ground_truths,
-            'model_adv_preds': adv_classification,
-        }
+        obj.update(
+            {
+                'heatmaps': heatmaps,
+                'labels': heatmap_labels,
+                'model_vanilla_preds': classification,
+                'ground_truth': ground_truths,
+                'model_adv_preds': adv_classification,
+            }
+        )
 
     torch.save(
         obj, 'deep_fake_hm_dataset.pt'
