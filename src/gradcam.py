@@ -1,99 +1,77 @@
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from matplotlib import pyplot as plt
-import cv2
-from PIL import Image
-from torchvision.transforms import ToTensor
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+import torchattacks
 
 from src.classifier import DeepFakeClassifier
+from src.train import init_dataloader
 
+VANILLA = 0
+ADVERSARIAL = 1
 
-class GradCAM:
-    def __init__(self, model: nn.Module, target_layer):
-        self.model = model
-        model.eval()
-        self.target_layer = target_layer
-        self._hooks = []
-        self._activations = None
-        self._grads = None
+def extract_heatmap_features(correct_heatmaps: np.ndarray):
+    all_hu_moments = []
+    for heatmap in correct_heatmaps:
+        heatmap_as_img = (heatmap * 255.0).astype(np.uint8)
+        moments = cv2.moments(heatmap_as_img)
+        hu_moments = cv2.HuMoments(moments).flatten()
+        all_hu_moments.append(hu_moments)
+    return torch.tensor(np.stack(all_hu_moments, axis=0))
 
-    def _forward_hook(self, module, inp, out):
-        self._activations = out.squeeze()
+def filter_heatmaps(cam, grayscale_cam, label):
+    activations: torch.Tensor = cam.outputs
+    predicted: torch.Tensor = activations.argmax(dim=1)
+    correct_mask = (predicted != label).cpu().numpy()
+    correct_heatmaps = grayscale_cam[~correct_mask]
+    return correct_heatmaps
 
-    def _backward_hook(self, module, grad_inp, grad_out):
-        self._grads = grad_out[0].squeeze()
-
-    def __enter__(self):
-        self._hooks = [
-            self.target_layer.register_forward_hook(self._forward_hook),
-            self.target_layer.register_full_backward_hook(self._backward_hook)
-        ]
-        return self
-
-    def __exit__(self, *args):
-        for hook in self._hooks:
-            hook.remove()
-
-    def compute_heatmap(self, x: torch.Tensor, target_class: int):
-        if not len(self._hooks):
-            raise ValueError('Ensure that you are calling within GradCAM context to ensure hooks are initialised/freed')
-
-        output = self.model(x)
-        output[:, target_class].backward()
-
-        importance_weights = torch.mean(self._grads, dim=[1, 2])
-        scaled_activations = self._activations * importance_weights.unsqueeze(1).unsqueeze(2)
-        L = F.relu(scaled_activations.sum(dim=0))
-
-        original_height, original_width = x.shape[2], x.shape[3]
-        upsampled_L = F.interpolate(
-            L.unsqueeze(0).unsqueeze(0),
-            size=(original_height, original_width),
-            mode='bilinear',
-            align_corners=False
-        )
-        return upsampled_L.squeeze(0).squeeze(0), L
-
-    @staticmethod
-    def visualise_heatmap(x: torch.Tensor, upsampled_L: torch.Tensor):
-        upsampled_L = upsampled_L.cpu().detach().numpy()
-
-        upsampled_L = np.maximum(upsampled_L, 0)
-        upsampled_L = upsampled_L - np.min(upsampled_L)
-        if np.max(upsampled_L) != 0:
-            upsampled_L = upsampled_L / np.max(upsampled_L)
-
-        heatmap_uint8 = np.uint8(255 * upsampled_L)
-
-        colored_heatmap = cv2.applyColorMap(heatmap_uint8, cv2.COLORMAP_JET)
-        orig_img = x.squeeze().permute(1, 2, 0).cpu().detach().numpy()
-        orig_img = np.uint8(255 * orig_img)
-
-        alpha = 0.4
-        superimposed_img = (colored_heatmap * alpha + orig_img * (1 - alpha)).astype(np.uint8)
-
-        plt.imshow(superimposed_img)
-        plt.axis('off')
-        plt.title('Grad-CAM Heatmap')
-        plt.show()
-
-
-def main():
-    img = Image.open("dataset/deepfake-dataset/validation/real/aybgughjxh_56_0.png").convert("RGB")
-    tensor_img = ToTensor()(img).unsqueeze(0)
+def main(model_path: str, batch_size: int):
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    num_workers = 4 if device == 'cuda' else 0
+    loader = init_dataloader(batch_size=batch_size, dev=device, nw=num_workers)
 
     model = DeepFakeClassifier()
-    model.load_state_dict(torch.load('model.pt', map_location='cpu', weights_only=True))
+    model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=True))
+    model.eval()
 
-    with GradCAM(model, model.backbone.layer4) as G:
-        heatmap, _ = G.compute_heatmap(tensor_img, 0)
-    GradCAM.visualise_heatmap(tensor_img, heatmap)
+    attack = torchattacks.FGSM(model)
 
+    target_layers = [model.backbone.layer4[-1]]
+    targets = [ClassifierOutputTarget(0)]
+
+    heatmaps = []
+    model_classifications = []
+    ground_truths = []
+    with GradCAM(model=model, target_layers=target_layers) as cam:
+        for img, label in loader:
+            img, label = img.to(device), label.to(device)
+            ground_truths.append(label.cpu())
+
+            # Original Image
+            grayscale_cam = cam(input_tensor=img, targets=targets)
+            extracted_heatmap_features = extract_heatmap_features(grayscale_cam)
+            model_classifications.append(cam.outputs.argmax(dim=1))
+
+            # Adv. Example
+            adv_img = attack(img, label)
+            grayscale_cam_adv = cam(input_tensor=adv_img, targets=targets)
+            adv_extracted_heatmap_features = extract_heatmap_features(grayscale_cam_adv)
+
+            heatmaps.append(extracted_heatmap_features)
+            heatmaps.append(adv_extracted_heatmap_features)
+
+    heatmaps = torch.concat(heatmaps, dim=0)
+    heatmap_labels = (torch.arange(2 * len(loader)) % 2).repeat_interleave(batch_size)
+    model_classifications = torch.concat(model_classifications, dim=0).repeat_interleave(2)
+    ground_truths = torch.concat(ground_truths, dim=0).repeat_interleave(2)
 
 if __name__ == '__main__':
-    main()
+    main(model_path='new_model.pt', batch_size=8)
 
 
 
