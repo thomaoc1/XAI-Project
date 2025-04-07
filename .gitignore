@@ -178,3 +178,5 @@ cython_debug/
 .pypirc
 
 .DS_Store/
+
+results/figs/

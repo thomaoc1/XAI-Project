@@ -1,6 +1,9 @@
+import numpy as np
 import torch
 import os
 import torchattacks
+from matplotlib import pyplot as plt
+from sklearn.metrics import roc_curve, auc
 from tqdm import tqdm
 
 from pytorch_grad_cam import GradCAM
@@ -26,8 +29,50 @@ def init_models(device: str, classifier_path: str = 'new_model.pt', vae_model_pa
 
     return classifier, vae_model
 
+def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
+    scores_all = torch.cat([score_clean, score_adv]).numpy()
+    labels_all = np.concatenate([np.zeros(len(score_clean)), np.ones(len(score_adv))])
 
-def main():
+    fpr, tpr, thresholds = roc_curve(labels_all, scores_all)
+    roc_auc = auc(fpr, tpr)
+
+    j_scores = tpr - fpr
+    best_threshold = thresholds[np.argmax(j_scores)]
+
+    print(f'Clean Mean: {score_clean.mean().item():.4f}, Std: {score_clean.std().item():.4f}')
+    print(f'Adv   Mean: {score_adv.mean().item():.4f}, Std: {score_adv.std().item():.4f}')
+    print(f'AUC Score:      {roc_auc}')
+    print(f'Best Threshold: {best_threshold}')
+
+    return roc_auc, best_threshold, fpr, tpr
+
+
+def save_auc_plot(roc_auc, fpr, tpr, path='figs/vae_auc_plot.png'):
+    plt.figure(figsize=(6, 6))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.4f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')  # Diagonal line (random guess)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve — VAE ELBO Detector')
+    plt.legend(loc="lower right")
+    plt.grid(alpha=0.3)
+    plt.savefig(path)
+
+
+def save_results(all_score_clean: torch.Tensor, all_score_adv: torch.Tensor, roc_auc: float, best_threshold: float, path: str):
+    torch.save(
+        {
+            'all_score_clean': all_score_clean,
+            'all_score_adv': all_score_adv,
+            'roc_auc': roc_auc,
+            'best_threshold': best_threshold,
+        }, path
+    )
+
+
+def main(run_name: str):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
@@ -60,10 +105,9 @@ def main():
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
 
-    print(f'Clean Mean: {all_score_clean.mean().item():.4f}, Std: {all_score_clean.std().item():.4f}')
-    print(f'Adv   Mean: {all_score_adv.mean().item():.4f}, Std: {all_score_adv.std().item():.4f}')
-
-    torch.save({'clean': all_score_clean, 'adv': all_score_adv}, 'vae_elbo_scores.pt')
+    roc_auc, best_threshold, fpr, tpr = evaluate(all_score_clean, all_score_adv)
+    save_results(all_score_clean, all_score_adv, roc_auc, best_threshold, path=f'results/{run_name}.pt')
+    save_auc_plot(roc_auc, fpr, tpr, path=f'results/figs/{run_name}.png')
 
 
 if __name__ == '__main__':
