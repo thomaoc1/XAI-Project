@@ -7,3 +7,4 @@ opencv-python~=4.11.0.86
 numpy~=2.2.4
 torchattacks~=3.5.1
 scikit-image~=0.25.2
+grad-cam~=1.5.4
