@@ -1,6 +1,7 @@
 import torch
 import os
 import torchattacks
+from tqdm import tqdm
 
 from pytorch_grad_cam import GradCAM
 
@@ -29,16 +30,18 @@ def main():
 
     all_score_clean = []
     all_score_adv = []
+
     with GradCAM(model=model, target_layers=target_layers) as cam:
-        for img, label in loader:
-            img = img.to(device)
-            grayscale_cam = torch.tensor(cam(input_tensor=img)).unsqueeze(1)
+        for img, label in tqdm(loader, desc='Processing'):
+            img, label = img.to(device), label.to(device)
+
+            grayscale_cam = torch.tensor(cam(input_tensor=img)).unsqueeze(1).to(device)
 
             adv_img = attack(img, label)
-            grayscale_cam_adv = torch.tensor(cam(input_tensor=adv_img)).unsqueeze(1)
+            grayscale_cam_adv = torch.tensor(cam(input_tensor=adv_img)).unsqueeze(1).to(device)
 
-            recon, mu, logvar = vae_model(grayscale_cam)
-            recon_adv, mu_adv, logvar_adv = vae_model(grayscale_cam_adv)
+            recon, _, _ = vae_model(grayscale_cam)
+            recon_adv, _, _ = vae_model(grayscale_cam_adv)
 
             score_clean = torch.nn.functional.mse_loss(recon, grayscale_cam, reduction='none').flatten(1).mean(1)
             score_adv = torch.nn.functional.mse_loss(recon_adv, grayscale_cam_adv, reduction='none').flatten(1).mean(1)
@@ -46,18 +49,13 @@ def main():
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())
 
-        all_score_clean = torch.cat(all_score_clean)
-        all_score_adv = torch.cat(all_score_adv)
+    all_score_clean = torch.cat(all_score_clean)
+    all_score_adv = torch.cat(all_score_adv)
 
-        print(f'Clean Mean: {all_score_clean.mean().item()}, Std: {all_score_clean.std().item()}')
-        print(f'Adv   Mean: {all_score_adv.mean().item()}, Std: {all_score_adv.std().item()}')
+    print(f'Clean Mean: {all_score_clean.mean().item():.4f}, Std: {all_score_clean.std().item():.4f}')
+    print(f'Adv   Mean: {all_score_adv.mean().item():.4f}, Std: {all_score_adv.std().item():.4f}')
 
-        torch.save(
-            {
-                'clean': all_score_clean,
-                'adv': all_score_adv
-            }, 'vae_scores.pt'
-        )
+    torch.save({'clean': all_score_clean, 'adv': all_score_adv}, 'vae_scores.pt')
 
 
 if __name__ == '__main__':
