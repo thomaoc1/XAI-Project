@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-import os
+import argparse
 import torchattacks
 from matplotlib import pyplot as plt
 from sklearn.metrics import roc_curve, auc
@@ -39,10 +39,10 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     j_scores = tpr - fpr
     best_threshold = thresholds[np.argmax(j_scores)]
 
-    print(f'Clean Mean: {score_clean.mean().item():.4f}, Std: {score_clean.std().item():.4f}')
-    print(f'Adv   Mean: {score_adv.mean().item():.4f}, Std: {score_adv.std().item():.4f}')
-    print(f'AUC Score:      {roc_auc}')
-    print(f'Best Threshold: {best_threshold}')
+    print(f'Clean Mean:      {score_clean.mean().item():.4f}, Std: {score_clean.std().item():.4f}')
+    print(f'Adv   Mean:      {score_adv.mean().item():.4f}, Std: {score_adv.std().item():.4f}')
+    print(f'AUC   Score:     {roc_auc}')
+    print(f'Best  Threshold: {best_threshold}')
 
     return roc_auc, best_threshold, fpr, tpr
 
@@ -72,11 +72,11 @@ def save_results(all_score_clean: torch.Tensor, all_score_adv: torch.Tensor, roc
     )
 
 
-def main(run_name: str):
+def main(run_name: str, dataset_path: str):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
-    loader = init_dataloader(batch_size=64, dev=device, nw=num_workers)
+    loader = init_dataloader(batch_size=64, dev=device, nw=num_workers, path=dataset_path)
     model, vae_model = init_models(device)
     attack = torchattacks.FGSM(model)
 
