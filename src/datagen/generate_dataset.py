@@ -103,6 +103,7 @@ def main(model_path: str, batch_size: int, adv: bool = False):
                 batch_heatmaps = torch.tensor(grayscale_cam)
 
             heatmaps.append(batch_heatmaps)
+            print(heatmaps)
 
             metrics = {
                 'Vanilla Acc': (vanilla_preds == label.cpu()).float().mean().item()

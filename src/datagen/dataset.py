@@ -10,9 +10,7 @@ class UnsupervisedHeatmapDataset(Dataset):
         return len(self.heatmaps)
 
     def __getitem__(self, idx):
-        return {
-            'heatmaps': self.heatmaps[idx],
-        }
+        return self.heatmaps[idx]
 
 
 class HeatmapDataset(UnsupervisedHeatmapDataset):
