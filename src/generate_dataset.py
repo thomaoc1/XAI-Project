@@ -8,7 +8,7 @@ from pytorch_grad_cam import GradCAM
 from tqdm import tqdm
 
 from src.classifier import DeepFakeClassifier
-from src.train import init_dataloader
+from src.classifier.train import init_dataloader
 
 VANILLA = 0
 ADVERSARIAL = 1
@@ -103,12 +103,12 @@ def main(model_path: str, batch_size: int):
 
             # Original Image
             grayscale_cam = cam(input_tensor=img)
-            vanilla_preds = cam.outputs.argmax(dim=1)
+            vanilla_preds: torch.Tensor = cam.outputs.argmax(dim=1)
 
             # Adv. Example
             adv_img = attack(img, label)
             grayscale_cam_adv = cam(input_tensor=adv_img)
-            adv_preds = cam.outputs.argmax(dim=1)
+            adv_preds: torch.Tensor = cam.outputs.argmax(dim=1)
 
             batch_ground_truths = torch.cat([label, label])
             batch_vanilla_preds = torch.cat([vanilla_preds, vanilla_preds])

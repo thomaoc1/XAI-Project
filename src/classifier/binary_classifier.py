@@ -2,7 +2,7 @@ import torch.nn as nn
 from torchvision.models import ResNet50_Weights, resnet50
 
 
-class DeepFakeClassifier(nn.Module):
+class BinaryClassifier(nn.Module):
     def __init__(self):
         super().__init__()
         self.backbone = resnet50(weights=ResNet50_Weights.DEFAULT)
