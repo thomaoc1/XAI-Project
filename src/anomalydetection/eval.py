@@ -110,5 +110,27 @@ def main(run_name: str, dataset_path: str):
     save_auc_plot(roc_auc, fpr, tpr, path=f'results/figs/{run_name}.png')
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Adversarial Detection using VAE ELBO Scores")
+
+    # Required arguments
+    parser.add_argument("--run_name", "-rn", type=str, required=True, help="Name for this run")
+    parser.add_argument("--dataset_path", "-dp", type=str, required=True, help="Path to the dataset directory")
+
+    # Model paths (with defaults)
+    parser.add_argument("--classifier_path", type=str, default="new_model.pt", help="Path to classifier model")
+    parser.add_argument("--vae_model_path", type=str, default="cnn_vae_model.pt", help="Path to VAE model")
+
+    # Attack configuration
+    parser.add_argument("--attack", type=str, default="FGSM", choices=["FGSM", "PGD", "CW"])
+    parser.add_argument("--eps", type=float, default=0.03, help="Attack perturbation magnitude (default: 0.03)")
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    main()
+    args = parse_args()
+    main(
+        run_name=args.run_name,
+        dataset_path=args.dataset_path,
+    )
