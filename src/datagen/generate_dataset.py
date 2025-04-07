@@ -58,7 +58,7 @@ def main(model_path: str, batch_size: int, adv: bool = False):
     loader = init_dataloader(batch_size=batch_size, dev=device, nw=num_workers)
 
     model = BinaryClassifier()
-    model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=True))
+    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     model.eval()
 
     attack = torchattacks.FGSM(model)
