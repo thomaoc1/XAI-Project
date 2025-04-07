@@ -6,8 +6,12 @@ import torchvision.transforms as transforms
 import tqdm
 from sklearn.metrics import classification_report
 
-
 from src.classifier.binary_classifier import BinaryClassifier
+
+def init_dataloader(batch_size, nw, dev, path="dataset/deepfake-dataset/validation"):
+    dataset = ImageFolder(path, transform=transforms.ToTensor())
+    loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=dev == 'cuda')
+    return loader
 
 
 def evaluate(path: str, batch_size: int, nw: int, dev: str):
@@ -15,8 +19,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     model.load_state_dict(torch.load(path, map_location=dev, weights_only=True))
     model.eval()
 
-    dataset = ImageFolder("dataset/deepfake-dataset/validation", transform=transforms.ToTensor())
-    loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=dev == 'cuda')
+    loader = init_dataloader(batch_size=batch_size, nw=nw, dev=dev)
 
     total_loss = 0.0
     total_correct = 0
