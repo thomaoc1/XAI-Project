@@ -2,35 +2,15 @@ import cv2
 import numpy as np
 from skimage.feature import hog
 import torch
-from torch.utils.data.dataset import Dataset
 import torchattacks
 from pytorch_grad_cam import GradCAM
 from tqdm import tqdm
 
-from src.classifier import DeepFakeClassifier
-from src.classifier.train import init_dataloader
+from src.baseclassifier.binary_classifier import BinaryClassifier
+from src.baseclassifier.train import init_dataloader
 
 VANILLA = 0
 ADVERSARIAL = 1
-
-class HeatmapDataset(Dataset):
-    def __init__(self, heatmaps: torch.Tensor, adv_labels: torch.Tensor,
-                 model_preds: torch.Tensor, ground_truth: torch.Tensor):
-        self.heatmaps = heatmaps
-        self.adv_labels = adv_labels
-        self.model_preds = model_preds
-        self.ground_truth = ground_truth
-
-    def __len__(self):
-        return len(self.heatmaps)
-
-    def __getitem__(self, idx):
-        return {
-            'features': self.heatmaps[idx],
-            'adv_label': self.adv_labels[idx],
-            'model_pred': self.model_preds[idx],
-            'ground_truth': self.ground_truth[idx]
-        }
 
 
 def extract_heatmap_features(correct_heatmaps: np.ndarray):
@@ -70,19 +50,13 @@ def extract_heatmap_features(correct_heatmaps: np.ndarray):
 
     return torch.tensor(np.stack(all_features, axis=0), dtype=torch.float32)
 
-def filter_heatmaps(cam, grayscale_cam, label):
-    activations: torch.Tensor = cam.outputs
-    predicted: torch.Tensor = activations.argmax(dim=1)
-    correct_mask = (predicted != label).cpu().numpy()
-    correct_heatmaps = grayscale_cam[~correct_mask]
-    return correct_heatmaps
 
 def main(model_path: str, batch_size: int):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
     loader = init_dataloader(batch_size=batch_size, dev=device, nw=num_workers)
 
-    model = DeepFakeClassifier()
+    model = BinaryClassifier()
     model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=True))
     model.eval()
 

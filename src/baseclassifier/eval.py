@@ -7,11 +7,11 @@ import tqdm
 from sklearn.metrics import classification_report
 
 
-from src.classifier import DeepFakeClassifier
+from src.classifier.binary_classifier import BinaryClassifier
 
 
 def evaluate(path: str, batch_size: int, nw: int, dev: str):
-    model = DeepFakeClassifier().to(dev)
+    model = BinaryClassifier().to(dev)
     model.load_state_dict(torch.load(path, map_location=dev, weights_only=True))
     model.eval()
 

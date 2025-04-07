@@ -8,7 +8,8 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 
-from src.classifier import DeepFakeClassifier
+from src.baseclassifier.binary_classifier import BinaryClassifier
+
 
 def init_dataloader(batch_size, dev, nw):
     dataset = ImageFolder("dataset/deepfake-dataset/train", transform=transforms.ToTensor())
@@ -21,11 +22,10 @@ def init_dataloader(batch_size, dev, nw):
     )
     return loader
 
-
 def train(num_epochs: int, batch_size: int, nw: int, dev: str):
     loader = init_dataloader(batch_size, dev, nw)
 
-    model = DeepFakeClassifier().to(dev)
+    model = BinaryClassifier().to(dev)
     optimiser = torch.optim.Adam(model.parameters())
 
     for epoch in range(num_epochs):
