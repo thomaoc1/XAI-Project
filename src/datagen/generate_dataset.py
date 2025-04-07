@@ -1,4 +1,5 @@
 import cv2
+import time
 import numpy as np
 from skimage.feature import hog
 import torch
