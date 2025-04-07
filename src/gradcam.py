@@ -1,9 +1,11 @@
 import cv2
 import numpy as np
+from skimage.feature import hog
 import torch
 from torch.utils.data.dataset import Dataset
 import torchattacks
 from pytorch_grad_cam import GradCAM
+from tqdm import tqdm
 
 from src.classifier import DeepFakeClassifier
 from src.train import init_dataloader
@@ -30,14 +32,43 @@ class HeatmapDataset(Dataset):
             'ground_truth': self.ground_truth[idx]
         }
 
+
 def extract_heatmap_features(correct_heatmaps: np.ndarray):
-    all_hu_moments = []
+    all_features = []  # Will store the combined feature vectors
+
     for heatmap in correct_heatmaps:
         heatmap_as_img = (heatmap * 255.0).astype(np.uint8)
+
+        # 1. Hu Moments (7 features)
         moments = cv2.moments(heatmap_as_img)
         hu_moments = cv2.HuMoments(moments).flatten()
-        all_hu_moments.append(hu_moments)
-    return torch.tensor(np.stack(all_hu_moments, axis=0))
+
+        # 2. HOG Features
+        resized = cv2.resize(heatmap, (64, 64))
+        hog_feat = hog(
+            resized,
+            pixels_per_cell=(8, 8),
+            cells_per_block=(1, 1),
+            orientations=8
+        )
+
+        # 3. Intensity statistics (2 features)
+        mean_intensity = np.array([np.mean(heatmap)])
+        std_intensity = np.array([np.std(heatmap)])
+
+        # Combine all features into one vector
+        combined_features = np.concatenate(
+            [
+                hu_moments,
+                hog_feat,
+                mean_intensity,
+                std_intensity
+            ]
+        )
+
+        all_features.append(combined_features)
+
+    return torch.tensor(np.stack(all_features, axis=0), dtype=torch.float32)
 
 def filter_heatmaps(cam, grayscale_cam, label):
     activations: torch.Tensor = cam.outputs
@@ -65,24 +96,24 @@ def main(model_path: str, batch_size: int):
     all_adv_preds = []
     all_ground_truths = []
     with GradCAM(model=model, target_layers=target_layers) as cam:
-        for img, label in loader:
+        progress_bar = tqdm(loader, desc="Processing batches", unit="batch")
+
+        for img, label in progress_bar:
             img, label = img.to(device), label.to(device)
 
             # Original Image
             grayscale_cam = cam(input_tensor=img)
-            vanilla_features = extract_heatmap_features(grayscale_cam)
             vanilla_preds = cam.outputs.argmax(dim=1)
 
             # Adv. Example
             adv_img = attack(img, label)
             grayscale_cam_adv = cam(input_tensor=adv_img)
-            adv_features = extract_heatmap_features(grayscale_cam_adv)
             adv_preds = cam.outputs.argmax(dim=1)
 
             batch_ground_truths = torch.cat([label, label])
             batch_vanilla_preds = torch.cat([vanilla_preds, vanilla_preds])
             batch_adv_preds = torch.cat([torch.ones(batch_size, dtype=torch.int) * -1, adv_preds])
-            batch_heatmaps = torch.cat([vanilla_features, adv_features], dim=0)
+            batch_heatmaps = torch.cat([torch.tensor(grayscale_cam), torch.tensor(grayscale_cam_adv)])
             batch_labels = torch.cat(
                 [
                     torch.zeros(batch_size, dtype=torch.int),  # VANILLA
@@ -96,12 +127,21 @@ def main(model_path: str, batch_size: int):
             all_adv_preds.append(batch_adv_preds)
             all_ground_truths.append(batch_ground_truths)
 
+            progress_bar.set_postfix(
+                {
+                    'Vanilla Acc': (vanilla_preds == label).float().mean().item(),
+                    'Adv Acc': (adv_preds == label).float().mean().item(),
+                    'Flip Rate': (vanilla_preds != adv_preds).float().mean().item()
+                }
+            )
+
     heatmaps = torch.cat(heatmaps, dim=0)
     heatmap_labels = torch.cat(all_labels, dim=0)
     classification = torch.cat(all_vanilla_preds, dim=0)
     ground_truths = torch.cat(all_ground_truths, dim=0)
     adv_classification = torch.cat(all_adv_preds, dim=0)
 
+    print(heatmaps.shape)
     print(heatmap_labels)
     print(classification)
     print(ground_truths)
@@ -118,7 +158,7 @@ def main(model_path: str, batch_size: int):
     )
 
 if __name__ == '__main__':
-    main(model_path='new_model.pt', batch_size=4)
+    main(model_path='new_model.pt', batch_size=64)
 
 
 
