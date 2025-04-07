@@ -51,7 +51,7 @@ def extract_heatmap_features(correct_heatmaps: np.ndarray):
     return torch.tensor(np.stack(all_features, axis=0), dtype=torch.float32)
 
 
-def main(model_path: str, batch_size: int):
+def main(model_path: str, batch_size: int, adv: bool = False):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
     loader = init_dataloader(batch_size=batch_size, dev=device, nw=num_workers)
@@ -75,60 +75,68 @@ def main(model_path: str, batch_size: int):
         for img, label in progress_bar:
             img, label = img.to(device), label.to(device)
 
-            # Original Image
             grayscale_cam = cam(input_tensor=img)
             vanilla_preds: torch.Tensor = cam.outputs.argmax(dim=1)
 
-            # Adv. Example
-            adv_img = attack(img, label)
-            grayscale_cam_adv = cam(input_tensor=adv_img)
-            adv_preds: torch.Tensor = cam.outputs.argmax(dim=1)
+            if adv:
+                adv_img = attack(img, label)
+                grayscale_cam_adv = cam(input_tensor=adv_img)
+                adv_preds: torch.Tensor = cam.outputs.argmax(dim=1)
 
-            batch_ground_truths = torch.cat([label, label])
-            batch_vanilla_preds = torch.cat([vanilla_preds, vanilla_preds])
-            batch_adv_preds = torch.cat([torch.ones(batch_size, dtype=torch.int) * -1, adv_preds])
-            batch_heatmaps = torch.cat([torch.tensor(grayscale_cam), torch.tensor(grayscale_cam_adv)])
-            batch_labels = torch.cat(
-                [
-                    torch.zeros(batch_size, dtype=torch.int),  # VANILLA
-                    torch.ones(batch_size, dtype=torch.int)  # ADVERSARIAL
-                ]
-            )
+                batch_ground_truths = torch.cat([label, label])
+                batch_vanilla_preds = torch.cat([vanilla_preds, vanilla_preds])
+                batch_heatmaps = torch.cat([torch.tensor(grayscale_cam), torch.tensor(grayscale_cam_adv)])
+                batch_adv_preds = torch.cat([torch.ones(batch_size, dtype=torch.int) * -1, adv_preds])
+                batch_labels = torch.cat(
+                    [
+                        torch.zeros(batch_size, dtype=torch.int),  # VANILLA
+                        torch.ones(batch_size, dtype=torch.int)  # ADVERSARIAL
+                    ]
+                )
+
+                all_vanilla_preds.append(batch_vanilla_preds)
+                all_adv_preds.append(batch_adv_preds)
+                all_ground_truths.append(batch_ground_truths)
+                all_labels.append(batch_labels)
+            else:
+                batch_heatmaps = torch.tenor(grayscale_cam)
 
             heatmaps.append(batch_heatmaps)
-            all_labels.append(batch_labels)
-            all_vanilla_preds.append(batch_vanilla_preds)
-            all_adv_preds.append(batch_adv_preds)
-            all_ground_truths.append(batch_ground_truths)
 
-            progress_bar.set_postfix(
-                {
-                    'Vanilla Acc': (vanilla_preds == label).float().mean().item(),
-                    'Adv Acc': (adv_preds == label).float().mean().item(),
-                    'Flip Rate': (vanilla_preds != adv_preds).float().mean().item()
+            metrics = {
+                'Vanilla Acc': (vanilla_preds == label.cpu()).float().mean().item()
                 }
-            )
+
+            if adv:
+                metrics.update(
+                    {
+                        'Adv Acc': (adv_preds == label.cpu()).float().mean().item(),
+                        'Flip Rate': (vanilla_preds != adv_preds).float().mean().item()
+                    }
+                )
+
+            progress_bar.set_postfix(metrics)
 
     heatmaps = torch.cat(heatmaps, dim=0)
-    heatmap_labels = torch.cat(all_labels, dim=0)
-    classification = torch.cat(all_vanilla_preds, dim=0)
-    ground_truths = torch.cat(all_ground_truths, dim=0)
-    adv_classification = torch.cat(all_adv_preds, dim=0)
+    obj = {
+        'heatmaps': heatmaps,
+    }
 
-    print(heatmaps.shape)
-    print(heatmap_labels)
-    print(classification)
-    print(ground_truths)
-    print(adv_classification)
-
-    torch.save(
-        {
+    if adv:
+        heatmap_labels = torch.cat(all_labels, dim=0)
+        classification = torch.cat(all_vanilla_preds, dim=0)
+        ground_truths = torch.cat(all_ground_truths, dim=0)
+        adv_classification = torch.cat(all_adv_preds, dim=0)
+        obj = {
             'heatmaps': heatmaps,
             'labels': heatmap_labels,
             'model_vanilla_preds': classification,
             'ground_truth': ground_truths,
             'model_adv_preds': adv_classification,
-        }, 'deep_fake_hm_dataset.pt'
+        }
+
+    torch.save(
+        obj, 'deep_fake_hm_dataset.pt'
     )
 
 if __name__ == '__main__':
