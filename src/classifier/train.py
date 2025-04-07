@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 import torchvision.transforms as transforms
 
-from src.baseclassifier.binary_classifier import BinaryClassifier
+from src.classifier.binary_classifier import BinaryClassifier
 
 
 def init_dataloader(batch_size, dev, nw):

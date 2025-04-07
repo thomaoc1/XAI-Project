@@ -6,8 +6,8 @@ import torchattacks
 from pytorch_grad_cam import GradCAM
 from tqdm import tqdm
 
-from src.baseclassifier.binary_classifier import BinaryClassifier
-from src.baseclassifier.train import init_dataloader
+from src.classifier.binary_classifier import BinaryClassifier
+from src.classifier.train import init_dataloader
 
 VANILLA = 0
 ADVERSARIAL = 1
