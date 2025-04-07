@@ -42,7 +42,6 @@ def main(model_path: str, batch_size: int):
     attack = torchattacks.FGSM(model)
 
     target_layers = [model.backbone.layer4[-1]]
-    targets = [ClassifierOutputTarget(0)]
 
     heatmaps = []
     model_classifications = []
@@ -53,13 +52,13 @@ def main(model_path: str, batch_size: int):
             ground_truths.append(label.cpu())
 
             # Original Image
-            grayscale_cam = cam(input_tensor=img, targets=targets)
+            grayscale_cam = cam(input_tensor=img)
             extracted_heatmap_features = extract_heatmap_features(grayscale_cam)
             model_classifications.append(cam.outputs.argmax(dim=1))
 
             # Adv. Example
             adv_img = attack(img, label)
-            grayscale_cam_adv = cam(input_tensor=adv_img, targets=targets)
+            grayscale_cam_adv = cam(input_tensor=adv_img)
             adv_extracted_heatmap_features = extract_heatmap_features(grayscale_cam_adv)
 
             heatmaps.append(extracted_heatmap_features)
