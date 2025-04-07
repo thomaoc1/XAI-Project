@@ -10,6 +10,11 @@ from src.classifier.binary_classifier import BinaryClassifier
 from src.classifier.eval import init_dataloader
 
 
+def compute_elbo(x, recon, mu, logvar):
+    recon_loss = torch.nn.functional.mse_loss(recon, x, reduction='none').flatten(1).mean(1)
+    kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+    return recon_loss + kl
+
 def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
@@ -40,11 +45,11 @@ def main():
             adv_img = attack(img, label)
             grayscale_cam_adv = torch.tensor(cam(input_tensor=adv_img)).unsqueeze(1).to(device)
 
-            recon, _, _ = vae_model(grayscale_cam)
-            recon_adv, _, _ = vae_model(grayscale_cam_adv)
+            recon, mu, logvar = vae_model(grayscale_cam)
+            recon_adv, mu_adv, logvar_adv = vae_model(grayscale_cam_adv)
 
-            score_clean = torch.nn.functional.mse_loss(recon, grayscale_cam, reduction='none').flatten(1).mean(1)
-            score_adv = torch.nn.functional.mse_loss(recon_adv, grayscale_cam_adv, reduction='none').flatten(1).mean(1)
+            score_clean = compute_elbo(grayscale_cam, recon, mu, logvar)
+            score_adv = compute_elbo(grayscale_cam_adv, recon_adv, mu_adv, logvar_adv)
 
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())
@@ -55,7 +60,7 @@ def main():
     print(f'Clean Mean: {all_score_clean.mean().item():.4f}, Std: {all_score_clean.std().item():.4f}')
     print(f'Adv   Mean: {all_score_adv.mean().item():.4f}, Std: {all_score_adv.std().item():.4f}')
 
-    torch.save({'clean': all_score_clean, 'adv': all_score_adv}, 'vae_scores.pt')
+    torch.save({'clean': all_score_clean, 'adv': all_score_adv}, 'vae_elbo_scores.pt')
 
 
 if __name__ == '__main__':
