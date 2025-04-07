@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import tqdm
 from sklearn.metrics import classification_report
 
-from src.classifier.binary_classifier import BinaryClassifier
+from src.classification.binary_classifier import BinaryClassifier
 
 def init_dataloader(batch_size, nw, dev, path="dataset/deepfake-dataset/validation"):
     dataset = ImageFolder(path, transform=transforms.ToTensor())

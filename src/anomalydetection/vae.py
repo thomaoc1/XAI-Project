@@ -1,21 +1,19 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class CNNVAE(nn.Module):
     def __init__(self, latent_dim):
         super(CNNVAE, self).__init__()
 
-        # Encoder
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=4, stride=2, padding=1),  # 80x80
+            nn.Conv2d(1, 32, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),  # 40x40
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),  # 20x20
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),  # 10x10
+            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
             nn.Flatten()
         )
@@ -23,17 +21,15 @@ class CNNVAE(nn.Module):
         self.fc_mu = nn.Linear(256 * 10 * 10, latent_dim)
         self.fc_logvar = nn.Linear(256 * 10 * 10, latent_dim)
 
-        # Decoder
         self.fc_decode = nn.Linear(latent_dim, 256 * 10 * 10)
-
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 20x20
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),  # 40x40
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),  # 80x80
+            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1),  # 160x160
+            nn.ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1),
             nn.Sigmoid()
         )
 

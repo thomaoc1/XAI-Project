@@ -6,8 +6,8 @@ from tqdm import tqdm
 from pytorch_grad_cam import GradCAM
 
 from src.anomalydetection.vae import CNNVAE
-from src.classifier.binary_classifier import BinaryClassifier
-from src.classifier.eval import init_dataloader
+from src.classification.binary_classifier import BinaryClassifier
+from src.classification.eval import init_dataloader
 
 
 def compute_elbo(x, recon, mu, logvar):
@@ -15,27 +15,30 @@ def compute_elbo(x, recon, mu, logvar):
     kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
     return recon_loss + kl
 
+def init_models(device: str, classifier_path: str = 'new_model.pt', vae_model_path: str = 'cnn_vae_model.pt'):
+    classifier = BinaryClassifier().to(device)
+    classifier.load_state_dict(torch.load(classifier_path, map_location=device, weights_only=True))
+    classifier.eval()
+
+    vae_model = CNNVAE(latent_dim=128).to(device)
+    vae_model.load_state_dict(torch.load(vae_model_path, map_location=device, weights_only=True))
+    vae_model.eval()
+
+    return classifier, vae_model
+
+
 def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
-    model = BinaryClassifier().to(device)
-    model.load_state_dict(torch.load('new_model.pt', map_location=device, weights_only=True))
-    model.eval()
-
-    vae_model = CNNVAE(latent_dim=128).to(device)
-    vae_model.load_state_dict(torch.load('cnn_vae_model.pt', map_location=device, weights_only=True))
-    vae_model.eval()
-
+    loader = init_dataloader(batch_size=64, dev=device, nw=num_workers)
+    model, vae_model = init_models(device)
     attack = torchattacks.FGSM(model)
 
     target_layers = [model.backbone.layer4[-1]]
 
-    loader = init_dataloader(batch_size=64, dev=device, nw=num_workers)
-
     all_score_clean = []
     all_score_adv = []
-
     with GradCAM(model=model, target_layers=target_layers) as cam:
         for img, label in tqdm(loader, desc='Processing'):
             img, label = img.to(device), label.to(device)
