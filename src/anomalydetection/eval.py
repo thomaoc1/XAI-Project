@@ -13,11 +13,11 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
-    model = BinaryClassifier()
+    model = BinaryClassifier().to(device)
     model.load_state_dict(torch.load('new_model.pt', map_location=device, weights_only=True))
     model.eval()
 
-    vae_model = CNNVAE(latent_dim=128)
+    vae_model = CNNVAE(latent_dim=128).to(device)
     vae_model.load_state_dict(torch.load('cnn_vae_model.pt', map_location=device, weights_only=True))
     vae_model.eval()
 
@@ -31,6 +31,7 @@ def main():
     all_score_adv = []
     with GradCAM(model=model, target_layers=target_layers) as cam:
         for img, label in loader:
+            img = img.to(device)
             grayscale_cam = torch.tensor(cam(input_tensor=img)).unsqueeze(1)
 
             adv_img = attack(img, label)
