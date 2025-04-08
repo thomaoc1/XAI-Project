@@ -72,7 +72,7 @@ def save_results(
         roc_auc: float,
         best_threshold: float,
         path: str
-):
+    ):
     torch.save(
         {
             'all_score_clean': all_score_clean,
@@ -98,6 +98,7 @@ def main(cfg: DatasetConfig):
     model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())
 
     attack = getattr(torchattacks, cfg.attack_name)(model)
+    hm_transform = cfg.get_vae_transform()
 
     target_layers = [model.backbone.layer4[-1]]
 
@@ -112,15 +113,14 @@ def main(cfg: DatasetConfig):
             adv_img = attack(img, label)
             grayscale_cam_adv = torch.tensor(cam(input_tensor=adv_img)).unsqueeze(1).to(device)
 
-            recon, mu, logvar = vae_model(grayscale_cam)
-            recon_adv, mu_adv, logvar_adv = vae_model(grayscale_cam_adv)
+            recon, mu, logvar = vae_model(hm_transform(grayscale_cam))
+            recon_adv, mu_adv, logvar_adv = vae_model(hm_transform(grayscale_cam_adv))
 
             score_clean = compute_elbo(grayscale_cam, recon, mu, logvar)
             score_adv = compute_elbo(grayscale_cam_adv, recon_adv, mu_adv, logvar_adv)
 
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())
-            break
 
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
