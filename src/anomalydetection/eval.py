@@ -109,12 +109,14 @@ def main(cfg: DatasetConfig):
             img, label = img.to(device), label.to(device)
 
             grayscale_cam = torch.tensor(cam(input_tensor=img)).unsqueeze(1).to(device)
+            grayscale_cam = hm_transform(grayscale_cam)
 
             adv_img = attack(img, label)
             grayscale_cam_adv = torch.tensor(cam(input_tensor=adv_img)).unsqueeze(1).to(device)
+            grayscale_cam_adv = hm_transform(grayscale_cam_adv)
 
-            recon, mu, logvar = vae_model(hm_transform(grayscale_cam))
-            recon_adv, mu_adv, logvar_adv = vae_model(hm_transform(grayscale_cam_adv))
+            recon, mu, logvar = vae_model(grayscale_cam)
+            recon_adv, mu_adv, logvar_adv = vae_model(grayscale_cam_adv)
 
             score_clean = compute_elbo(grayscale_cam, recon, mu, logvar)
             score_adv = compute_elbo(grayscale_cam_adv, recon_adv, mu_adv, logvar_adv)
