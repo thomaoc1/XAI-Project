@@ -33,7 +33,7 @@ class DatasetConfig:
 
     def get_classifier_dataset_split(self, split: str):
         assert split in ['train', 'validation']
-        return os.path.join(self._dataset_base_path, self._dataset_save_name, split)
+        return os.path.join(self._dataset_base_path, self.dataset_name, split)
 
     def get_classifier_transform(self):
         if self.dataset_name == 'deepfake':
