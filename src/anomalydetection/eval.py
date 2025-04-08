@@ -90,7 +90,7 @@ def main(cfg: DatasetConfig):
     loader = init_dataloader(
         batch_size=64,
         nw=num_workers,
-        path=cfg.get_split('validation'),
+        path=cfg.get_classifier_dataset_split('validation'),
         transform=cfg.get_classifier_transform(),
         pin_memory=device == 'cuda',
     )

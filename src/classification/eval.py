@@ -1,3 +1,5 @@
+import argparse
+
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -6,19 +8,30 @@ import tqdm
 from sklearn.metrics import classification_report
 
 from src.classification.binary_classifier import BinaryClassifier
+from src.config import DatasetConfig
 
-def init_dataloader(batch_size, nw, path, transform, pin_memory):
+
+def init_dataloader(path: str, batch_size: int, nw: int, transform, pin_memory: bool):
     dataset = ImageFolder(path, transform=transform)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=pin_memory)
     return loader
 
 
-def evaluate(path: str, batch_size: int, nw: int, dev: str):
-    model = BinaryClassifier().to(dev)
-    model.load_state_dict(torch.load(path, map_location=dev, weights_only=True))
+def main(cfg: DatasetConfig, batch_size: int):
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    num_workers = 4 if device == 'cuda' else 0
+
+    model = BinaryClassifier().to(device)
+    model.load_state_dict(torch.load(cfg.get_classifier_save_path(), map_location=device, weights_only=True))
     model.eval()
 
-    loader = init_dataloader(batch_size=batch_size, nw=nw, pin_memory=dev == 'cuda')
+    loader = init_dataloader(
+        cfg.get_classifier_dataset_split('validation'),
+        batch_size=batch_size,
+        nw=num_workers,
+        transform=cfg.get_classifier_transform(),
+        pin_memory=device == 'cuda'
+    )
 
     total_loss = 0.0
     total_correct = 0
@@ -29,7 +42,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     progress_bar = tqdm.tqdm(loader, desc="Evaluating", leave=False)
     with torch.no_grad():
         for img, label in progress_bar:
-            img, label = img.to(dev), label.to(dev)
+            img, label = img.to(device), label.to(device)
             preds: torch.Tensor = model(img).squeeze(1)
             loss = F.cross_entropy(preds, label)
             total_loss += loss.item()
@@ -44,7 +57,16 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
 
     print(classification_report(all_labels, all_preds, target_names=["Fake", "Real"]))
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Evaluate Classifier")
+    parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
+    parser.add_argument('--batch_size', type=int, default=64)
+    return parser.parse_args()
+
 if __name__ == '__main__':
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    num_workers = 4 if device == 'cuda' else 0
-    evaluate("new_model.pt", batch_size=64, nw=num_workers, dev=device)
+    args = parse_args()
+    config = DatasetConfig(args.dataset)
+    main(
+        cfg=config,
+        batch_size=args.batch_size,
+    )

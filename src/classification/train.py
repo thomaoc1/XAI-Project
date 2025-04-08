@@ -1,28 +1,40 @@
+import argparse
+
 import torch
 import torch.nn.functional as F
-import torchvision.transforms as transforms
 import tqdm
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 
 from src.classification.binary_classifier import BinaryClassifier
+from src.config import DatasetConfig
 
 
-def init_dataloader(batch_size, dev, nw):
-    dataset = ImageFolder("dataset/deepfake-dataset/train", transform=transforms.ToTensor())
+def init_dataloader(dataset_path: str, batch_size: int, nw: int, transform, pin_memory: bool):
+    dataset = ImageFolder(dataset_path, transform=transform)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
         num_workers=nw,
         shuffle=True,
-        pin_memory=dev == 'cuda'
+        pin_memory=pin_memory
     )
     return loader
 
-def train(num_epochs: int, batch_size: int, nw: int, dev: str):
-    loader = init_dataloader(batch_size, dev, nw)
 
-    model = BinaryClassifier().to(dev)
+def main(cfg: DatasetConfig, num_epochs: int, batch_size: int):
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    num_workers = 4 if device == 'cuda' else 0
+
+    loader = init_dataloader(
+        cfg.get_classifier_dataset_split('train'),
+        batch_size,
+        num_workers,
+        pin_memory=device == 'cuda',
+        transform=cfg.get_classifier_transform()
+    )
+
+    model = BinaryClassifier().to(device)
     optimiser = torch.optim.Adam(model.parameters())
 
     for epoch in range(num_epochs):
@@ -30,7 +42,7 @@ def train(num_epochs: int, batch_size: int, nw: int, dev: str):
         progress_bar = tqdm.tqdm(loader, desc=f"Epoch {epoch + 1}/{num_epochs}", leave=False)
 
         for img, label in progress_bar:
-            img, label = img.to(dev), label.to(dev)
+            img, label = img.to(device), label.to(device)
 
             preds = model(img).squeeze(1)
             loss = F.cross_entropy(preds, label)
@@ -47,13 +59,18 @@ def train(num_epochs: int, batch_size: int, nw: int, dev: str):
 
     torch.save(model.state_dict(), 'new_model.pt')
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Training Classifier")
+    parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
+    parser.add_argument('--epochs', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=64)
+    return parser.parse_args()
 
 if __name__ == '__main__':
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    num_workers = 4 if device == 'cuda' else 0
-    train(
-        num_epochs=5,
-        batch_size=64,
-        nw=num_workers,
-        dev=device,
+    args = parse_args()
+    config = DatasetConfig(args.dataset)
+    main(
+        cfg=config,
+        num_epochs=args.epochs,
+        batch_size=args.batch_size,
     )

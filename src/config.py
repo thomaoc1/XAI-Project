@@ -30,7 +30,7 @@ class DatasetConfig:
     def get_classifier_save_path(self):
         return os.path.join(self._model_base_path, f'{self.dataset_name}_classifier.pt')
 
-    def get_split(self, split: str):
+    def get_classifier_dataset_split(self, split: str):
         assert split in ['train', 'validation']
         return os.path.join(self._model_base_path, self.dataset_name, split)
 
