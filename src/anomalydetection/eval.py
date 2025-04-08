@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch
 import argparse
@@ -47,7 +49,7 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     return roc_auc, best_threshold, fpr, tpr
 
 
-def save_auc_plot(roc_auc, fpr, tpr, dataset: str, path='figs/vae_auc_plot.png'):
+def save_auc_plot(roc_auc, fpr, tpr, dataset: str, attack: str, path='figs/vae_auc_plot.png'):
     plt.figure(figsize=(6, 6))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.4f})')
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')  # Diagonal line (random guess)
@@ -55,7 +57,7 @@ def save_auc_plot(roc_auc, fpr, tpr, dataset: str, path='figs/vae_auc_plot.png')
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title(f'ROC Curve ({dataset.capitalize()}) — VAE ELBO Detector')
+    plt.title(f'ROC Curve for {dataset.capitalize()} using {attack.upper()} — VAE ELBO Detector')
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
     plt.savefig(path)
@@ -71,14 +73,22 @@ def save_results(all_score_clean: torch.Tensor, all_score_adv: torch.Tensor, roc
         }, path
     )
 
+def get_paths(dataset_name: str, attack_name: str):
+    classifier_path = os.path.join('model', f'{dataset_name}_classifier.pt')
+    vae_path = os.path.join('model', f'{dataset_name}_{attack_name.lower()}_hm_vae.pt')
+    dataset_path = os.path.join('dataset', dataset_name, 'validation')
+    return dataset_path, classifier_path, vae_path
 
-def main(run_name: str, dataset_path: str, classifier_path: str, vae_path: str):
+
+def main(dataset_name: str, attack_name: str):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
+    dataset_path, classifier_path, vae_path = get_paths(dataset_name, attack_name)
     loader = init_dataloader(batch_size=64, dev=device, nw=num_workers, path=dataset_path)
     model, vae_model = init_models(device, classifier_path, vae_path)
-    attack = torchattacks.FGSM(model)
+
+    attack = getattr(torchattacks, attack_name)(model)
 
     target_layers = [model.backbone.layer4[-1]]
 
@@ -106,31 +116,25 @@ def main(run_name: str, dataset_path: str, classifier_path: str, vae_path: str):
     all_score_adv = torch.cat(all_score_adv)
 
     roc_auc, best_threshold, fpr, tpr = evaluate(all_score_clean, all_score_adv)
-    save_results(all_score_clean, all_score_adv, roc_auc, best_threshold, path=f'results/{run_name}_vae_eval_stats.pt')
-    save_auc_plot(roc_auc, fpr, tpr, dataset=run_name, path=f'results/figs/{run_name}.png')
+    save_results(all_score_clean, all_score_adv, roc_auc, best_threshold, path=f'results/{dataset_name}_{attack_name.lower()}_scores.pt')
+    save_auc_plot(roc_auc, fpr, tpr, dataset=dataset_name, attack=attack_name, path=f'results/figs/{dataset_name}_{attack_name.lower()}.png')
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Adversarial Detection using VAE ELBO Scores")
 
-    # Required arguments
-    parser.add_argument("--run_name", "-rn", type=str, required=True, help="Name for this run")
-    parser.add_argument("--dataset_path", "-dp", type=str, required=True, help="Path to the dataset directory")
-    parser.add_argument("--classifier_path", "-cp", type=str, required=True, help="Path to classifier model")
-    parser.add_argument("--vae_model_path", "-vp", type=str, required=True, help="Path to VAE model")
-
-    # Attack configuration
-    parser.add_argument("--attack", type=str, default="FGSM", choices=["FGSM", "PGD", "CW"])
-    parser.add_argument("--eps", type=float, default=0.03, help="Attack perturbation magnitude (default: 0.03)")
+    parser.add_argument("dataset", type=str, choices=["deepfake", "cats_vs_dogs"])
+    parser.add_argument("attack", type=str, choices=["FGSM", "PGD"])
+    parser.add_argument("--eps", type=float, default=0.03)
+    parser.add_argument("--run_name", type=str, default="")
 
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
+
     main(
-        run_name=args.run_name,
-        dataset_path=args.dataset_path,
-        classifier_path=args.classifier_path,
-        vae_path=args.vae_model_path,
+        dataset_name=args.dataset,
+        attack_name=args.attack,
     )
