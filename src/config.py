@@ -10,6 +10,7 @@ class DatasetConfig:
 
         self.dataset_name = dataset_name
         self.attack_name = attack_name
+        self._dataset_save_name = dataset_name.replace('-', '_')
         self._dataset_base_path = 'dataset'
         self._heatmap_dataset_base_path = os.path.join(self._dataset_base_path, 'heatmap')
         self._model_base_path = 'model'
@@ -21,18 +22,18 @@ class DatasetConfig:
 
     def get_heatmap_dataset_path(self):
         self._check_attack_set()
-        return os.path.join(self._heatmap_dataset_base_path, f'{self.dataset_name}_{self.attack_name}_hm_dataset.pt')
+        return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_{self.attack_name}_hm_dataset.pt')
 
     def get_vae_save_path(self):
         self._check_attack_set()
-        return os.path.join(self._model_base_path, f'{self.dataset_name}_{self.attack_name}_hm_vae.pt')
+        return os.path.join(self._model_base_path, f'{self._dataset_save_name}_{self.attack_name}_hm_vae.pt')
 
     def get_classifier_save_path(self):
-        return os.path.join(self._model_base_path, f'{self.dataset_name}_classifier.pt')
+        return os.path.join(self._model_base_path, f'{self._dataset_save_name}_classifier.pt')
 
     def get_classifier_dataset_split(self, split: str):
         assert split in ['train', 'validation']
-        return os.path.join(self._dataset_base_path, self.dataset_name, split)
+        return os.path.join(self._dataset_base_path, self._dataset_save_name, split)
 
     def get_classifier_transform(self):
         if self.dataset_name == 'deepfake':
@@ -54,8 +55,8 @@ class DatasetConfig:
 
     def get_vae_results_save_path(self):
         self._check_attack_set()
-        return os.path.join(self._results_base_path, f'{self.dataset_name}_{self.attack_name}_scores.pt')
+        return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_scores.pt')
 
     def get_vae_figs_save_path(self):
         self._check_attack_set()
-        return os.path.join(self._results_base_path, 'figs', f'{self.dataset_name}_{self.attack_name}.png')
+        return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
