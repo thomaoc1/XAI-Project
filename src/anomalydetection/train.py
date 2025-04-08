@@ -31,10 +31,8 @@ def loss_function(recon_x, x, mu, logvar):
 
 def get_paths(dataset_name: str, attack_name: str):
     dataset_path = os.path.join('dataset', 'heatmap', f'{dataset_name}_{attack_name.lower()}_hm_dataset.pt')
-    save_path = os.path.join('model', f'{dataset_name}_{attack_name}_hm_vae.pt')
+    save_path = os.path.join('model', f'{dataset_name}_{attack_name.lower()}_hm_vae.pt')
     return dataset_path, save_path
-
-
 
 
 def main(dataset_name: str, attack_name: str, n_epochs: int, batch_size: int):

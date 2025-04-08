@@ -5,7 +5,7 @@ from torchvision.datasets import ImageFolder
 
 
 if __name__ == '__main__':
-    data = ImageFolder("dataset/deepfake-dataset/train", transform=torchvision.transforms.ToTensor())
+    data = ImageFolder("dataset/deepfake/train", transform=torchvision.transforms.ToTensor())
     loader = DataLoader(data)
 
     for X, y in loader:
