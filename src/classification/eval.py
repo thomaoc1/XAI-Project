@@ -2,14 +2,13 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-import torchvision.transforms as transforms
 import tqdm
 from sklearn.metrics import classification_report
 
 from src.classification.binary_classifier import BinaryClassifier
 
-def init_dataloader(batch_size, nw, dev, path="dataset/deepfake-dataset/validation"):
-    dataset = ImageFolder(path, transform=transforms.ToTensor())
+def init_dataloader(batch_size, nw, dev, path, transform):
+    dataset = ImageFolder(path, transform=transform)
     loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=dev == 'cuda')
     return loader
 

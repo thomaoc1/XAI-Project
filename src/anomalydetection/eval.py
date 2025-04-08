@@ -13,12 +13,14 @@ from pytorch_grad_cam import GradCAM
 from src.anomalydetection.vae import CNNVAE
 from src.classification.binary_classifier import BinaryClassifier
 from src.classification.eval import init_dataloader
+from src.config import DatasetConfig
 
 
 def compute_elbo(x, recon, mu, logvar):
     recon_loss = torch.nn.functional.mse_loss(recon, x, reduction='none').flatten(1).mean(1)
     kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
     return recon_loss + kl
+
 
 def init_models(device: str, classifier_path: str, vae_model_path: str):
     classifier = BinaryClassifier().to(device)
@@ -30,6 +32,7 @@ def init_models(device: str, classifier_path: str, vae_model_path: str):
     vae_model.eval()
 
     return classifier, vae_model
+
 
 def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     scores_all = torch.cat([score_clean, score_adv]).numpy()
@@ -63,7 +66,13 @@ def save_auc_plot(roc_auc, fpr, tpr, dataset: str, attack: str, path='figs/vae_a
     plt.savefig(path)
 
 
-def save_results(all_score_clean: torch.Tensor, all_score_adv: torch.Tensor, roc_auc: float, best_threshold: float, path: str):
+def save_results(
+        all_score_clean: torch.Tensor,
+        all_score_adv: torch.Tensor,
+        roc_auc: float,
+        best_threshold: float,
+        path: str
+):
     torch.save(
         {
             'all_score_clean': all_score_clean,
@@ -73,20 +82,20 @@ def save_results(all_score_clean: torch.Tensor, all_score_adv: torch.Tensor, roc
         }, path
     )
 
-def get_paths(dataset_name: str, attack_name: str):
-    classifier_path = os.path.join('model', f'{dataset_name}_classifier.pt')
-    vae_path = os.path.join('model', f'{dataset_name}_{attack_name.lower()}_hm_vae.pt')
-    dataset_path = os.path.join('dataset', dataset_name, 'validation')
-    return dataset_path, classifier_path, vae_path
 
-
-def main(dataset_name: str, attack_name: str):
+def main(cfg: DatasetConfig, dataset_name: str, attack_name: str):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
-    dataset_path, classifier_path, vae_path = get_paths(dataset_name, attack_name)
-    loader = init_dataloader(batch_size=64, dev=device, nw=num_workers, path=dataset_path)
-    model, vae_model = init_models(device, classifier_path, vae_path)
+    loader = init_dataloader(
+        batch_size=64,
+        dev=device,
+        nw=num_workers,
+        path=cfg.get_split('validation'),
+        transform=cfg.get_classifier_transform()
+    )
+
+    model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())
 
     attack = getattr(torchattacks, attack_name)(model)
 
@@ -111,13 +120,28 @@ def main(dataset_name: str, attack_name: str):
 
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())
+            break
 
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
 
     roc_auc, best_threshold, fpr, tpr = evaluate(all_score_clean, all_score_adv)
-    save_results(all_score_clean, all_score_adv, roc_auc, best_threshold, path=f'results/{dataset_name}_{attack_name.lower()}_scores.pt')
-    save_auc_plot(roc_auc, fpr, tpr, dataset=dataset_name, attack=attack_name, path=f'results/figs/{dataset_name}_{attack_name.lower()}.png')
+    save_results(
+        all_score_clean,
+        all_score_adv,
+        roc_auc,
+        best_threshold,
+        path=cfg.get_vae_results_save_path(),
+    )
+
+    save_auc_plot(
+        roc_auc,
+        fpr,
+        tpr,
+        dataset=dataset_name,
+        attack=attack_name,
+        path=cfg.get_vae_figs_save_path(),
+    )
 
 
 def parse_args():
@@ -134,7 +158,10 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
+    config = DatasetConfig(args.dataset, args.attack)
+
     main(
+        cfg=config,
         dataset_name=args.dataset,
         attack_name=args.attack,
     )
