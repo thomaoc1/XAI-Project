@@ -47,7 +47,7 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     return roc_auc, best_threshold, fpr, tpr
 
 
-def save_auc_plot(roc_auc, fpr, tpr, path='figs/vae_auc_plot.png'):
+def save_auc_plot(roc_auc, fpr, tpr, dataset: str, path='figs/vae_auc_plot.png'):
     plt.figure(figsize=(6, 6))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.4f})')
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')  # Diagonal line (random guess)
@@ -55,7 +55,7 @@ def save_auc_plot(roc_auc, fpr, tpr, path='figs/vae_auc_plot.png'):
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve — VAE ELBO Detector')
+    plt.title(f'ROC Curve ({dataset.capitalize()}) — VAE ELBO Detector')
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
     plt.savefig(path)
@@ -101,14 +101,13 @@ def main(run_name: str, dataset_path: str, classifier_path: str, vae_path: str):
 
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())
-            break
 
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
 
     roc_auc, best_threshold, fpr, tpr = evaluate(all_score_clean, all_score_adv)
-    save_results(all_score_clean, all_score_adv, roc_auc, best_threshold, path=f'results/{run_name}.pt')
-    save_auc_plot(roc_auc, fpr, tpr, path=f'results/figs/{run_name}.png')
+    save_results(all_score_clean, all_score_adv, roc_auc, best_threshold, path=f'results/{run_name}_vae_eval_stats.pt')
+    save_auc_plot(roc_auc, fpr, tpr, dataset=run_name, path=f'results/figs/{run_name}.png')
 
 
 def parse_args():
