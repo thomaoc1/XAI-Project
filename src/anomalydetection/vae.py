@@ -7,29 +7,29 @@ class CNNVAE(nn.Module):
         super(CNNVAE, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(1, 32, kernel_size=4, stride=2, padding=1),  # 224 -> 112
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),  # 112 -> 56
             nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1),  # 56 -> 28
             nn.ReLU(),
-            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),  # 28 -> 14
             nn.ReLU(),
             nn.Flatten()
         )
 
-        self.fc_mu = nn.Linear(256 * 10 * 10, latent_dim)
-        self.fc_logvar = nn.Linear(256 * 10 * 10, latent_dim)
+        self.fc_mu = nn.Linear(256 * 14 * 14, latent_dim)
+        self.fc_logvar = nn.Linear(256 * 14 * 14, latent_dim)
 
-        self.fc_decode = nn.Linear(latent_dim, 256 * 10 * 10)
+        self.fc_decode = nn.Linear(latent_dim, 256 * 14 * 14)
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
+            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),  # 14 -> 28
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),  # 28 -> 56
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
+            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),  # 56 -> 112
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1),
+            nn.ConvTranspose2d(32, 1, kernel_size=4, stride=2, padding=1),  # 112 -> 224
             nn.Sigmoid()
         )
 
@@ -46,7 +46,7 @@ class CNNVAE(nn.Module):
 
     def decode(self, z):
         h = self.fc_decode(z)
-        h = h.view(-1, 256, 10, 10)
+        h = h.view(-1, 256, 14, 14)
         return self.decoder(h)
 
     def forward(self, x):

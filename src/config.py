@@ -36,7 +36,12 @@ class DatasetConfig:
     def get_classifier_transform(self):
         if self.dataset_name == 'deepfake':
             return transforms.Compose([
+                transforms.Resize(224),
                 transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                )
             ])
         if self.dataset_name == 'dogs-vs-cats':
             return transforms.Compose([
@@ -63,6 +68,6 @@ class DatasetConfig:
         if self.dataset_name == 'deepfake':
             return transforms.Compose([])
         if self.dataset_name == 'dogs-vs-cats':
-            return transforms.Compose([transforms.Resize(160)])
+            return transforms.Compose([])
         else:
             raise ValueError(f'No transform for {self.dataset_name}')
