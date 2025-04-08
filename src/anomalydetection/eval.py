@@ -18,7 +18,7 @@ def compute_elbo(x, recon, mu, logvar):
     kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
     return recon_loss + kl
 
-def init_models(device: str, classifier_path: str = 'new_model.pt', vae_model_path: str = 'cnn_vae_model.pt'):
+def init_models(device: str, classifier_path: str, vae_model_path: str):
     classifier = BinaryClassifier().to(device)
     classifier.load_state_dict(torch.load(classifier_path, map_location=device, weights_only=True))
     classifier.eval()
@@ -72,12 +72,12 @@ def save_results(all_score_clean: torch.Tensor, all_score_adv: torch.Tensor, roc
     )
 
 
-def main(run_name: str, dataset_path: str):
+def main(run_name: str, dataset_path: str, classifier_path: str, vae_path: str):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
     loader = init_dataloader(batch_size=64, dev=device, nw=num_workers, path=dataset_path)
-    model, vae_model = init_models(device)
+    model, vae_model = init_models(device, classifier_path, vae_path)
     attack = torchattacks.FGSM(model)
 
     target_layers = [model.backbone.layer4[-1]]
@@ -118,8 +118,8 @@ def parse_args():
     parser.add_argument("--dataset_path", "-dp", type=str, required=True, help="Path to the dataset directory")
 
     # Model paths (with defaults)
-    parser.add_argument("--classifier_path", type=str, default="new_model.pt", help="Path to classifier model")
-    parser.add_argument("--vae_model_path", type=str, default="cnn_vae_model.pt", help="Path to VAE model")
+    parser.add_argument("--classifier_path", "-cp", type=str, default="new_model.pt", help="Path to classifier model")
+    parser.add_argument("--vae_model_path", "-vp", type=str, default="cnn_vae_model.pt", help="Path to VAE model")
 
     # Attack configuration
     parser.add_argument("--attack", type=str, default="FGSM", choices=["FGSM", "PGD", "CW"])
@@ -133,4 +133,6 @@ if __name__ == '__main__':
     main(
         run_name=args.run_name,
         dataset_path=args.dataset_path,
+        classifier_path=args.classifier_path,
+        vae_path=args.vae_model_path,
     )
