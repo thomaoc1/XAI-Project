@@ -30,12 +30,6 @@ def loss_function(recon_x, x, mu, logvar):
     return recon_loss + kl_loss
 
 
-def get_paths(dataset_name: str, attack_name: str):
-    dataset_path = os.path.join('dataset', 'heatmap', f'{dataset_name}_{attack_name.lower()}_hm_dataset.pt')
-    save_path = os.path.join('model', f'{dataset_name}_{attack_name.lower()}_hm_vae.pt')
-    return dataset_path, save_path
-
-
 def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -71,7 +65,6 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
 def parse_args():
     parser = argparse.ArgumentParser(description="Train VAE on heatmap dataset")
     parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
-    parser.add_argument('attack', type=str, choices=["FGSM", "PGD"])
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--batch_size', type=int, default=64)
     return parser.parse_args()
@@ -80,7 +73,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    config = DatasetConfig(args.dataset, args.attack)
+    config = DatasetConfig(args.dataset)
 
     main(
         cfg=config,
