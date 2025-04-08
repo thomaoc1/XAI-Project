@@ -39,10 +39,10 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     j_scores = tpr - fpr
     best_threshold = thresholds[np.argmax(j_scores)]
 
-    print(f'Clean Mean:      {score_clean.mean().item():.4f}, Std: {score_clean.std().item():.4f}')
-    print(f'Adv   Mean:      {score_adv.mean().item():.4f}, Std: {score_adv.std().item():.4f}')
-    print(f'AUC   Score:     {roc_auc}')
-    print(f'Best  Threshold: {best_threshold}')
+    print(f'Clean Mean:      {score_clean.mean().item():.2f}, Std: {score_clean.std().item():.2f}')
+    print(f'Adv   Mean:      {score_adv.mean().item():.2f}, Std: {score_adv.std().item():.2f}')
+    print(f'AUC   Score:     {roc_auc:.2f}')
+    print(f'Best  Threshold: {best_threshold:.2f}')
 
     return roc_auc, best_threshold, fpr, tpr
 
@@ -101,6 +101,7 @@ def main(run_name: str, dataset_path: str, classifier_path: str, vae_path: str):
 
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())
+            break
 
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
@@ -116,8 +117,6 @@ def parse_args():
     # Required arguments
     parser.add_argument("--run_name", "-rn", type=str, required=True, help="Name for this run")
     parser.add_argument("--dataset_path", "-dp", type=str, required=True, help="Path to the dataset directory")
-
-    # Model paths (with defaults)
     parser.add_argument("--classifier_path", "-cp", type=str, required=True, help="Path to classifier model")
     parser.add_argument("--vae_model_path", "-vp", type=str, required=True, help="Path to VAE model")
 
