@@ -7,11 +7,8 @@ import torchattacks
 from pytorch_grad_cam import GradCAM
 from tqdm import tqdm
 
-from src.classifier.binary_classifier import BinaryClassifier
-from src.classifier.train import init_dataloader
-
-VANILLA = 0
-ADVERSARIAL = 1
+from src.classification.binary_classifier import BinaryClassifier
+from src.classification.train import init_dataloader
 
 
 def extract_heatmap_features(correct_heatmaps: np.ndarray):

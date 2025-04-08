@@ -123,7 +123,7 @@ def main(dataset_name: str, attack_name: str):
 def parse_args():
     parser = argparse.ArgumentParser(description="Adversarial Detection using VAE ELBO Scores")
 
-    parser.add_argument("dataset", type=str, choices=["deepfake", "cats_vs_dogs"])
+    parser.add_argument("dataset", type=str, choices=["deepfake", "dogs-vs-cats"])
     parser.add_argument("attack", type=str, choices=["FGSM", "PGD"])
     parser.add_argument("--eps", type=float, default=0.03)
     parser.add_argument("--run_name", type=str, default="")

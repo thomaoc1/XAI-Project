@@ -1,12 +1,9 @@
-import os
-from typing import Optional
-
 import torch
 import torch.nn.functional as F
+import torchvision.transforms as transforms
 import tqdm
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-import torchvision.transforms as transforms
 
 from src.classification.binary_classifier import BinaryClassifier
 

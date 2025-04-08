@@ -71,7 +71,7 @@ def main(dataset_name: str, attack_name: str, n_epochs: int, batch_size: int):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train VAE on heatmap dataset")
-    parser.add_argument('dataset', type=str, choices=['deepfake', 'cats_vs_dogs'])
+    parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
     parser.add_argument('attack', type=str, choices=["FGSM", "PGD"])
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--batch_size', type=int, default=64)
