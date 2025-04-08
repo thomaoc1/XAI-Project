@@ -47,7 +47,7 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
     for epoch in tqdm(range(n_epochs), desc="Epochs"):
         epoch_loss = 0.0
         for hm in loader:
-            hm = hm.to(device).unsqueeze(1)
+            hm = hm.to(device)
             optimizer.zero_grad()
             recon_x, mu, logvar = vae(hm)
             loss = loss_function(recon_x, hm, mu, logvar)
