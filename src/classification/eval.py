@@ -7,9 +7,9 @@ from sklearn.metrics import classification_report
 
 from src.classification.binary_classifier import BinaryClassifier
 
-def init_dataloader(batch_size, nw, dev, path, transform):
+def init_dataloader(batch_size, nw, path, transform, pin_memory):
     dataset = ImageFolder(path, transform=transform)
-    loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=dev == 'cuda')
+    loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=pin_memory)
     return loader
 
 
@@ -18,7 +18,7 @@ def evaluate(path: str, batch_size: int, nw: int, dev: str):
     model.load_state_dict(torch.load(path, map_location=dev, weights_only=True))
     model.eval()
 
-    loader = init_dataloader(batch_size=batch_size, nw=nw, dev=dev)
+    loader = init_dataloader(batch_size=batch_size, nw=nw, pin_memory=dev == 'cuda')
 
     total_loss = 0.0
     total_correct = 0

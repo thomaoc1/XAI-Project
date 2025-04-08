@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from src.anomalydetection.vae import CNNVAE
+from src.config import DatasetConfig
 from src.datagen.dataset import UnsupervisedHeatmapDataset
 
 
@@ -35,19 +36,17 @@ def get_paths(dataset_name: str, attack_name: str):
     return dataset_path, save_path
 
 
-def main(dataset_name: str, attack_name: str, n_epochs: int, batch_size: int):
+def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     vae = CNNVAE(latent_dim=128).to(device)
     optimizer = torch.optim.Adam(vae.parameters(), lr=1e-3)
 
-    dataset_path, save_path = get_paths(dataset_name, attack_name)
-
     loader = init_dataloader(
-        dataset_path,
+        cfg.get_heatmap_dataset_path(),
         batch_size=batch_size,
+        nw=4 if device == 'cuda' else 0,
         pin_memory=device == 'cuda',
-        nw=4 if device == 'cuda' else 0
     )
 
     for epoch in tqdm(range(n_epochs), desc="Epochs"):
@@ -66,7 +65,7 @@ def main(dataset_name: str, attack_name: str, n_epochs: int, batch_size: int):
 
     torch.save(
         vae.state_dict(),
-        save_path,
+        cfg.get_vae_save_path(),
     )
 
 def parse_args():
@@ -80,9 +79,11 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+
+    config = DatasetConfig(args.dataset, args.attack)
+
     main(
-        dataset_name=args.dataset,
-        attack_name=args.attack,
+        cfg=config,
         n_epochs=args.epochs,
         batch_size=args.batch_size,
     )

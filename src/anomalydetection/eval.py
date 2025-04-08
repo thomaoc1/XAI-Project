@@ -83,21 +83,21 @@ def save_results(
     )
 
 
-def main(cfg: DatasetConfig, dataset_name: str, attack_name: str):
+def main(cfg: DatasetConfig):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
     loader = init_dataloader(
         batch_size=64,
-        dev=device,
         nw=num_workers,
         path=cfg.get_split('validation'),
-        transform=cfg.get_classifier_transform()
+        transform=cfg.get_classifier_transform(),
+        pin_memory=device == 'cuda',
     )
 
     model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())
 
-    attack = getattr(torchattacks, attack_name)(model)
+    attack = getattr(torchattacks, cfg.attack_name)(model)
 
     target_layers = [model.backbone.layer4[-1]]
 
@@ -138,8 +138,8 @@ def main(cfg: DatasetConfig, dataset_name: str, attack_name: str):
         roc_auc,
         fpr,
         tpr,
-        dataset=dataset_name,
-        attack=attack_name,
+        dataset=cfg.dataset_name,
+        attack=cfg.attack_name,
         path=cfg.get_vae_figs_save_path(),
     )
 
@@ -162,6 +162,4 @@ if __name__ == '__main__':
 
     main(
         cfg=config,
-        dataset_name=args.dataset,
-        attack_name=args.attack,
     )
