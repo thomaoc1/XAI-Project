@@ -118,8 +118,8 @@ def parse_args():
     parser.add_argument("--dataset_path", "-dp", type=str, required=True, help="Path to the dataset directory")
 
     # Model paths (with defaults)
-    parser.add_argument("--classifier_path", "-cp", type=str, default="new_model.pt", help="Path to classifier model")
-    parser.add_argument("--vae_model_path", "-vp", type=str, default="cnn_vae_model.pt", help="Path to VAE model")
+    parser.add_argument("--classifier_path", "-cp", type=str, required=True, help="Path to classifier model")
+    parser.add_argument("--vae_model_path", "-vp", type=str, required=True, help="Path to VAE model")
 
     # Attack configuration
     parser.add_argument("--attack", type=str, default="FGSM", choices=["FGSM", "PGD", "CW"])
