@@ -57,7 +57,7 @@ def main(cfg: DatasetConfig, num_epochs: int, batch_size: int):
         avg_loss = epoch_loss / len(loader)
         print(f"Epoch {epoch + 1}/{num_epochs} - Avg Loss: {avg_loss:.4f}")
 
-    torch.save(model.state_dict(), 'new_model.pt')
+    torch.save(model.state_dict(), cfg.get_classifier_save_path())
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training Classifier")
