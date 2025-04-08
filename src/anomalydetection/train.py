@@ -11,9 +11,9 @@ from src.config import DatasetConfig
 from src.datagen.dataset import UnsupervisedHeatmapDataset
 
 
-def init_dataloader(dataset_path: str, batch_size: int, nw: int, pin_memory: bool):
+def init_dataloader(dataset_path: str, batch_size: int, nw: int, pin_memory: bool, transform: nn.Module):
     tensors = torch.load(dataset_path)
-    dataset = UnsupervisedHeatmapDataset(**tensors)
+    dataset = UnsupervisedHeatmapDataset(**tensors, transform=transform)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
@@ -41,6 +41,7 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
         batch_size=batch_size,
         nw=4 if device == 'cuda' else 0,
         pin_memory=device == 'cuda',
+        transform=cfg.get_vae_transform(),
     )
 
     for epoch in tqdm(range(n_epochs), desc="Epochs"):
