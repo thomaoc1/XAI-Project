@@ -8,13 +8,14 @@ from pytorch_grad_cam import GradCAM
 from sklearn.metrics import roc_curve, auc
 from tqdm import tqdm
 
+from src.anomalydetection.train import vae_loss_function
 from src.anomalydetection.vae import CNNVAE
 from src.classification.binary_classifier import BinaryClassifier
 from src.classification.eval import init_dataloader
 from src.config import DatasetConfig
 
 
-def compute_elbo(x, recon, mu, logvar):
+def compute_vae_loss_keep_dims(recon, x, mu, logvar):
     recon_loss = torch.nn.functional.mse_loss(recon, x, reduction='none').flatten(1).mean(1)
     kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
     return recon_loss + kl
@@ -128,8 +129,8 @@ def main(cfg: DatasetConfig):
             recon, mu, logvar = vae_model(grayscale_cam)
             recon_adv, mu_adv, logvar_adv = vae_model(grayscale_cam_adv)
 
-            score_clean = compute_elbo(grayscale_cam, recon, mu, logvar)
-            score_adv = compute_elbo(grayscale_cam_adv, recon_adv, mu_adv, logvar_adv)
+            score_clean = compute_vae_loss_keep_dims(recon, grayscale_cam, mu, logvar)
+            score_adv = compute_vae_loss_keep_dims(recon, grayscale_cam_adv, mu_adv, logvar_adv)
 
             all_score_clean.append(score_clean.detach().cpu())
             all_score_adv.append(score_adv.detach().cpu())

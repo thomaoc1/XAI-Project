@@ -24,7 +24,7 @@ def init_dataloader(dataset_path: str, batch_size: int, nw: int, pin_memory: boo
     return loader
 
 
-def loss_function(recon_x, x, mu, logvar):
+def vae_loss_function(recon_x, x, mu, logvar):
     recon_loss = nn.functional.mse_loss(recon_x, x, reduction='sum')
     kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return recon_loss + kl_loss
@@ -50,7 +50,7 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
             hm = hm.to(device)
             optimizer.zero_grad()
             recon_x, mu, logvar = vae(hm)
-            loss = loss_function(recon_x, hm, mu, logvar)
+            loss = vae_loss_function(recon_x, hm, mu, logvar)
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
