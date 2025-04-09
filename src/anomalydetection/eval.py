@@ -106,7 +106,7 @@ def main(cfg: DatasetConfig):
 
     model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())
 
-    attack = getattr(torchattacks, cfg.attack_name)(model)
+    attack = getattr(torchattacks, cfg.attack_name.upper())(model)
     hm_transform = cfg.get_vae_transform()
 
     target_layers = [model.backbone.layer4[-1]]
