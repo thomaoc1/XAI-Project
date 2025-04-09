@@ -1,14 +1,12 @@
-import os
+import argparse
 
 import numpy as np
 import torch
-import argparse
 import torchattacks
 from matplotlib import pyplot as plt
+from pytorch_grad_cam import GradCAM
 from sklearn.metrics import roc_curve, auc
 from tqdm import tqdm
-
-from pytorch_grad_cam import GradCAM
 
 from src.anomalydetection.vae import CNNVAE
 from src.classification.binary_classifier import BinaryClassifier
@@ -42,20 +40,30 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     roc_auc = auc(fpr, tpr)
 
     j_scores = tpr - fpr
-    best_threshold = thresholds[np.argmax(j_scores)]
+    optimal_idx = np.argmax(j_scores)
+    best_threshold = thresholds[optimal_idx]
 
     print(f'Clean Mean:      {score_clean.mean().item():.2f}, Std: {score_clean.std().item():.2f}')
     print(f'Adv   Mean:      {score_adv.mean().item():.2f}, Std: {score_adv.std().item():.2f}')
     print(f'AUC   Score:     {roc_auc:.2f}')
     print(f'Best  Threshold: {best_threshold:.2f}')
 
-    return roc_auc, best_threshold, fpr, tpr
+    return roc_auc, thresholds, fpr, tpr, optimal_idx
 
 
-def save_auc_plot(roc_auc, fpr, tpr, dataset: str, attack: str, path='figs/vae_auc_plot.png'):
+def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, dataset: str, attack: str, path='figs/vae_auc_plot.png'):
+    # Find best threshold (maximize TPR - FPR)
+    optimal_threshold = thresholds[optimal_idx]
+    optimal_fpr = fpr[optimal_idx]
+    optimal_tpr = tpr[optimal_idx]
+
     plt.figure(figsize=(6, 6))
     plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.4f})')
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')  # Diagonal line (random guess)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+
+    # Mark the optimal threshold
+    plt.scatter(optimal_fpr, optimal_tpr, color='red', label=f'Best Threshold = {optimal_threshold:.4f}', zorder=5)
+
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
@@ -64,6 +72,7 @@ def save_auc_plot(roc_auc, fpr, tpr, dataset: str, attack: str, path='figs/vae_a
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
     plt.savefig(path)
+    plt.close()
 
 
 def save_results(
@@ -127,12 +136,12 @@ def main(cfg: DatasetConfig):
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
 
-    roc_auc, best_threshold, fpr, tpr = evaluate(all_score_clean, all_score_adv)
+    roc_auc, thresholds, fpr, tpr, optimal_idx = evaluate(all_score_clean, all_score_adv)
     save_results(
         all_score_clean,
         all_score_adv,
         roc_auc,
-        best_threshold,
+        thresholds[optimal_idx],
         path=cfg.get_vae_results_save_path(),
     )
 
@@ -140,6 +149,8 @@ def main(cfg: DatasetConfig):
         roc_auc,
         fpr,
         tpr,
+        thresholds,
+        optimal_idx,
         dataset=cfg.dataset_name,
         attack=cfg.attack_name,
         path=cfg.get_vae_figs_save_path(),

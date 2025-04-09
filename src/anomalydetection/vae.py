@@ -5,7 +5,7 @@ import torch.nn as nn
 class CNNVAE(nn.Module):
     def __init__(self):
         super(CNNVAE, self).__init__()
-        latent_dim = 256
+        latent_dim = 128
 
         self.encoder = nn.Sequential(
             nn.Conv2d(1, 32, kernel_size=4, stride=2, padding=1),  # 224 -> 112
