@@ -33,7 +33,7 @@ def loss_function(recon_x, x, mu, logvar):
 def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    vae = CNNVAE(latent_dim=128).to(device)
+    vae = CNNVAE().to(device)
     optimizer = torch.optim.Adam(vae.parameters(), lr=1e-3)
 
     loader = init_dataloader(
@@ -66,7 +66,7 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
 def parse_args():
     parser = argparse.ArgumentParser(description="Train VAE on heatmap dataset")
     parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
-    parser.add_argument('--epochs', type=int, default=50)
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=64)
     return parser.parse_args()
 

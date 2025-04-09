@@ -27,7 +27,7 @@ def init_models(device: str, classifier_path: str, vae_model_path: str):
     classifier.load_state_dict(torch.load(classifier_path, map_location=device, weights_only=True))
     classifier.eval()
 
-    vae_model = CNNVAE(latent_dim=128).to(device)
+    vae_model = CNNVAE().to(device)
     vae_model.load_state_dict(torch.load(vae_model_path, map_location=device, weights_only=True))
     vae_model.eval()
 
