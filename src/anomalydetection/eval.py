@@ -71,6 +71,7 @@ def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, dataset: str, atta
     plt.title(f'VAE Anomaly Detector ROC Curve for {dataset.capitalize()} using {attack.upper()}')
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
+    print(f'Saved plot to {path}')
     plt.savefig(path)
     plt.close()
 
