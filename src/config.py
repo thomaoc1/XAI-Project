@@ -9,7 +9,7 @@ class DatasetConfig:
         assert not attack_name or attack_name in ['FGSM', 'PGD']
 
         self.dataset_name = dataset_name
-        self.attack_name = attack_name
+        self.attack_name = attack_name.lower()
         self._dataset_save_name = dataset_name.replace('-', '_')
         self._dataset_base_path = 'dataset'
         self._heatmap_dataset_base_path = os.path.join(self._dataset_base_path, 'heatmap')

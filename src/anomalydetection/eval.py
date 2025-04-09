@@ -68,7 +68,7 @@ def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, dataset: str, atta
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title(f'ROC Curve for {dataset.capitalize()} using {attack.upper()} — VAE ELBO Detector')
+    plt.title(f'VAE Anomaly Detector ROC Curve for {dataset.capitalize()} using {attack.upper()}')
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
     plt.savefig(path)
