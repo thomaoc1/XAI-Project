@@ -22,7 +22,13 @@ class DatasetConfig:
             raise ValueError('No attack set')
 
     def get_heatmap_dataset_path(self):
-        return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_hm_dataset.pt')
+        if self._target_class:
+            return os.path.join(
+                self._heatmap_dataset_base_path,
+                f'{self._dataset_save_name}_{self._target_class}_hm_dataset.pt',
+            )
+        else:
+            return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_hm_dataset.pt')
 
     def get_vae_save_path(self):
         return os.path.join(self._model_base_path, f'{self._dataset_save_name}_hm_vae.pt')
@@ -36,16 +42,20 @@ class DatasetConfig:
 
     def get_classifier_transform(self):
         if self.dataset_name == 'deepfake':
-            return transforms.Compose([
-                transforms.Resize(224),
-                transforms.ToTensor(),
-            ])
+            return transforms.Compose(
+                [
+                    transforms.Resize(224),
+                    transforms.ToTensor(),
+                ]
+            )
         if self.dataset_name == 'dogs-vs-cats':
-            return transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-            ])
+            return transforms.Compose(
+                [
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                ]
+            )
         else:
             raise ValueError(f'No transform for {self.dataset_name}')
 
