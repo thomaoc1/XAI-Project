@@ -114,7 +114,6 @@ def main(cfg: DatasetConfig):
     model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())
 
     attack = getattr(torchattacks, cfg.attack_name.upper())(model)
-    hm_transform = cfg.get_vae_transform()
 
     target_layers = [model.backbone.layer4[-1]]
 
@@ -125,11 +124,9 @@ def main(cfg: DatasetConfig):
             img, label = img.to(device), label.to(device)
 
             grayscale_cam = torch.tensor(cam(input_tensor=img)).unsqueeze(1).to(device)
-            grayscale_cam = hm_transform(grayscale_cam)
 
             adv_img = attack(img, label)
             grayscale_cam_adv = torch.tensor(cam(input_tensor=adv_img)).unsqueeze(1).to(device)
-            grayscale_cam_adv = hm_transform(grayscale_cam_adv)
 
             recon, mu, logvar = vae_model(grayscale_cam)
             recon_adv, mu_adv, logvar_adv = vae_model(grayscale_cam_adv)
@@ -169,7 +166,7 @@ def parse_args():
     parser.add_argument("dataset", type=str, choices=["deepfake", "dogs-vs-cats"])
     parser.add_argument("attack", type=str, choices=["FGSM", "PGD"])
     parser.add_argument("--eps", type=float, default=0.03)
-    parser.add_argument("--run_name", type=str, default="")
+    parser.add_argument('--target_class', type=str, default=None, choices=['fake', 'real', 'cat', 'dog'])
 
     return parser.parse_args()
 
@@ -177,7 +174,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    config = DatasetConfig(args.dataset, args.attack)
+    config = DatasetConfig(args.dataset, attack_name=args.attack, target_class=args.target_class)
 
     main(
         cfg=config,
