@@ -2,14 +2,31 @@ import argparse
 
 import torch
 from pytorch_grad_cam import GradCAM
+from torch.utils.data import Subset, DataLoader
+from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
 from src.classification.binary_classifier import BinaryClassifier
-from src.classification.train import init_dataloader
 from src.config import DatasetConfig
 
 
-def main(cfg: DatasetConfig, batch_size: int):
+def init_dataloader(path: str, batch_size: int, nw: int, transform, pin_memory: bool, target_class_name: str | None = None):
+    dataset = ImageFolder(path, transform=transform)
+
+    if target_class_name:
+        target_class_idx = dataset.class_to_idx[target_class_name]
+        indices = [i for i, (_, label) in enumerate(dataset.samples) if label == target_class_idx]
+        dataset = Subset(dataset, indices)
+
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        num_workers=nw,
+        pin_memory=pin_memory
+    )
+
+
+def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
@@ -45,9 +62,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Generate Heatmap Dataset")
     parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
     parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--target_class', type=str, default=None)
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
     config = DatasetConfig(args.dataset)
-    main(cfg=config, batch_size=args.batch_size)
+    main(cfg=config, batch_size=args.batch_size, target_class_name=args.target_class)
