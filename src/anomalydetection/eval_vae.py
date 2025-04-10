@@ -56,7 +56,7 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     return roc_auc, thresholds, fpr, tpr, optimal_idx, accuracy
 
 
-def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, dataset: str, attack: str, path='figs/vae_auc_plot.png'):
+def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, path='figs/vae_auc_plot.png'):
     # Find best threshold (maximize TPR - FPR)
     optimal_threshold = thresholds[optimal_idx]
     optimal_fpr = fpr[optimal_idx]
@@ -73,7 +73,6 @@ def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, dataset: str, atta
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title(f'VAE Anomaly Detector ROC Curve for {dataset.capitalize()} using {attack.upper()}')
     plt.legend(loc="lower right")
     plt.grid(alpha=0.3)
     print(f'Saved plot to {path}')
@@ -160,8 +159,6 @@ def main(cfg: DatasetConfig):
         tpr,
         thresholds,
         optimal_idx,
-        dataset=cfg.dataset_name,
-        attack=cfg.attack_name,
         path=cfg.get_vae_figs_save_path(),
     )
 
