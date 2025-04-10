@@ -32,7 +32,10 @@ class DatasetConfig:
             return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_hm_dataset.pt')
 
     def get_vae_save_path(self):
-        return os.path.join(self._model_base_path, f'{self._dataset_save_name}_hm_vae.pt')
+        if self._target_class:
+            return os.path.join(self._model_base_path, f'{self._dataset_save_name}_{self._target_class}_hm_vae.pt')
+        else:
+            return os.path.join(self._model_base_path, f'{self._dataset_save_name}_hm_vae.pt')
 
     def get_classifier_save_path(self):
         return os.path.join(self._model_base_path, f'{self._dataset_save_name}_classifier.pt')
