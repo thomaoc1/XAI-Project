@@ -4,11 +4,12 @@ from torchvision import transforms
 
 
 class DatasetConfig:
-    def __init__(self, dataset_name: str, attack_name: str | None = None):
+    def __init__(self, dataset_name: str, attack_name: str | None = None, target_class: str | None = None):
         assert dataset_name in ['deepfake', 'dogs-vs-cats']
         assert not attack_name or attack_name in ['FGSM', 'PGD']
 
         self.dataset_name = dataset_name
+        self._target_class = target_class.lower() if target_class else target_class
         self.attack_name = attack_name.lower() if attack_name else attack_name
         self._dataset_save_name = dataset_name.replace('-', '_')
         self._dataset_base_path = 'dataset'

@@ -10,7 +10,14 @@ from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
 
 
-def init_dataloader(path: str, batch_size: int, nw: int, transform, pin_memory: bool, target_class_name: str | None = None):
+def init_dataloader(
+        path: str,
+        batch_size: int,
+        nw: int,
+        transform,
+        pin_memory: bool,
+        target_class_name: str | None = None
+):
     dataset = ImageFolder(path, transform=transform)
 
     if target_class_name:
@@ -35,7 +42,8 @@ def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
         batch_size=batch_size,
         nw=num_workers,
         transform=cfg.get_classifier_transform(),
-        pin_memory=device == 'cuda'
+        pin_memory=device == 'cuda',
+        target_class_name=target_class_name,
     )
 
     model = BinaryClassifier()
@@ -52,11 +60,13 @@ def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
             batch_heatmaps = torch.tensor(grayscale_cam)
             heatmaps.append(batch_heatmaps)
 
-    torch.save({
-        'heatmaps': torch.cat(heatmaps, dim=0),
+    torch.save(
+        {
+            'heatmaps': torch.cat(heatmaps, dim=0),
         },
         cfg.get_heatmap_dataset_path()
     )
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate Heatmap Dataset")
@@ -65,7 +75,8 @@ def parse_args():
     parser.add_argument('--target_class', type=str, default=None)
     return parser.parse_args()
 
+
 if __name__ == '__main__':
     args = parse_args()
-    config = DatasetConfig(args.dataset)
+    config = DatasetConfig(args.dataset, args.target_class)
     main(cfg=config, batch_size=args.batch_size, target_class_name=args.target_class)
