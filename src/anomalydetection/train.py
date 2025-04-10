@@ -68,13 +68,14 @@ def parse_args():
     parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
     parser.add_argument('--epochs', type=int, default=50)
     parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--target_class', type=str, default=None, choices=['fake', 'real', 'cat', 'dog'])
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    config = DatasetConfig(args.dataset)
+    config = DatasetConfig(args.dataset, target_class=args.target_class)
 
     main(
         cfg=config,
