@@ -70,11 +70,3 @@ class DatasetConfig:
     def get_vae_figs_save_path(self):
         self._check_attack_set()
         return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
-
-    def get_vae_transform(self):
-        if self.dataset_name == 'deepfake':
-            return transforms.Compose([])
-        if self.dataset_name == 'dogs-vs-cats':
-            return transforms.Compose([])
-        else:
-            raise ValueError(f'No transform for {self.dataset_name}')
