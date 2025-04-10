@@ -65,8 +65,14 @@ class DatasetConfig:
 
     def get_vae_results_save_path(self):
         self._check_attack_set()
-        return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_scores.pt')
+        if self._target_class:
+            return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}_scores.pt')
+        else:
+            return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_scores.pt')
 
     def get_vae_figs_save_path(self):
         self._check_attack_set()
-        return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
+        if self._target_class:
+            return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}.png')
+        else:
+            return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
