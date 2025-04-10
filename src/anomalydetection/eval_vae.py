@@ -44,12 +44,16 @@ def evaluate(score_clean: torch.Tensor, score_adv: torch.Tensor):
     optimal_idx = np.argmax(j_scores)
     best_threshold = thresholds[optimal_idx]
 
+    predicted = (scores_all > best_threshold).astype(int)
+    accuracy = np.sum(predicted == labels_all) / len(labels_all)
+
     print(f'Clean Mean:      {score_clean.mean().item():.2f}, Std: {score_clean.std().item():.2f}')
     print(f'Adv   Mean:      {score_adv.mean().item():.2f}, Std: {score_adv.std().item():.2f}')
     print(f'AUC   Score:     {roc_auc:.2f}')
     print(f'Best  Threshold: {best_threshold:.2f}')
+    print(f"Accuracy with threshold: {accuracy:.4f}")
 
-    return roc_auc, thresholds, fpr, tpr, optimal_idx
+    return roc_auc, thresholds, fpr, tpr, optimal_idx, accuracy
 
 
 def save_auc_plot(roc_auc, fpr, tpr, thresholds, optimal_idx, dataset: str, attack: str, path='figs/vae_auc_plot.png'):
@@ -82,6 +86,7 @@ def save_results(
         all_score_adv: torch.Tensor,
         roc_auc: float,
         best_threshold: float,
+        accuracy: float,
         path: str
     ):
     torch.save(
@@ -90,6 +95,7 @@ def save_results(
             'all_score_adv': all_score_adv,
             'roc_auc': roc_auc,
             'best_threshold': best_threshold,
+            'accuracy': accuracy,
         }, path
     )
 
@@ -138,12 +144,13 @@ def main(cfg: DatasetConfig):
     all_score_clean = torch.cat(all_score_clean)
     all_score_adv = torch.cat(all_score_adv)
 
-    roc_auc, thresholds, fpr, tpr, optimal_idx = evaluate(all_score_clean, all_score_adv)
+    roc_auc, thresholds, fpr, tpr, optimal_idx, accuracy = evaluate(all_score_clean, all_score_adv)
     save_results(
         all_score_clean,
         all_score_adv,
         roc_auc,
         thresholds[optimal_idx],
+        accuracy,
         path=cfg.get_vae_results_save_path(),
     )
 
