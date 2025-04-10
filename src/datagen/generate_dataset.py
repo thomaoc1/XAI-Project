@@ -1,8 +1,5 @@
 import argparse
 
-import cv2
-import numpy as np
-from skimage.feature import hog
 import torch
 from pytorch_grad_cam import GradCAM
 from tqdm import tqdm
@@ -10,44 +7,6 @@ from tqdm import tqdm
 from src.classification.binary_classifier import BinaryClassifier
 from src.classification.train import init_dataloader
 from src.config import DatasetConfig
-
-
-def extract_heatmap_features(correct_heatmaps: np.ndarray):
-    all_features = []  # Will store the combined feature vectors
-
-    for heatmap in correct_heatmaps:
-        heatmap_as_img = (heatmap * 255.0).astype(np.uint8)
-
-        # 1. Hu Moments (7 features)
-        moments = cv2.moments(heatmap_as_img)
-        hu_moments = cv2.HuMoments(moments).flatten()
-
-        # 2. HOG Features
-        resized = cv2.resize(heatmap, (64, 64))
-        hog_feat = hog(
-            resized,
-            pixels_per_cell=(8, 8),
-            cells_per_block=(1, 1),
-            orientations=8
-        )
-
-        # 3. Intensity statistics (2 features)
-        mean_intensity = np.array([np.mean(heatmap)])
-        std_intensity = np.array([np.std(heatmap)])
-
-        # Combine all features into one vector
-        combined_features = np.concatenate(
-            [
-                hu_moments,
-                hog_feat,
-                mean_intensity,
-                std_intensity
-            ]
-        )
-
-        all_features.append(combined_features)
-
-    return torch.tensor(np.stack(all_features, axis=0), dtype=torch.float32)
 
 
 def main(cfg: DatasetConfig, batch_size: int):
