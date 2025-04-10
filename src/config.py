@@ -7,6 +7,7 @@ class DatasetConfig:
     def __init__(self, dataset_name: str, attack_name: str | None = None, target_class: str | None = None):
         assert dataset_name in ['deepfake', 'dogs-vs-cats']
         assert not attack_name or attack_name in ['FGSM', 'PGD']
+        assert not target_class or target_class in ['real', 'fake', 'dog', 'cat']
 
         self.dataset_name = dataset_name
         self._target_class = target_class.lower() if target_class else target_class
