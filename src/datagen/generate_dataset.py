@@ -72,7 +72,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Generate Heatmap Dataset")
     parser.add_argument('dataset', type=str, choices=['deepfake', 'dogs-vs-cats'])
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--target_class', type=str, default=None)
+    parser.add_argument('--target_class', type=str, default=None, choices=['fake', 'real', 'cat', 'dog'])
     return parser.parse_args()
 
 
