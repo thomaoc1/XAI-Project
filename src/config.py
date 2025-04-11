@@ -1,5 +1,4 @@
 import os
-
 from torchvision import transforms
 
 
@@ -18,6 +17,20 @@ class DatasetConfig:
         self._model_base_path = 'model'
         self._results_base_path = 'results'
 
+        self._create_required_dirs()
+
+    def _create_required_dirs(self):
+        required_dirs = [
+            self._dataset_base_path,
+            self._heatmap_dataset_base_path,
+            self._model_base_path,
+            self._results_base_path,
+            os.path.join(self._results_base_path, 'figs'),
+        ]
+
+        for path in required_dirs:
+            os.makedirs(path, exist_ok=True)
+
     def _check_attack_set(self):
         if not self.attack_name:
             raise ValueError('No attack set')
@@ -28,14 +41,12 @@ class DatasetConfig:
                 self._heatmap_dataset_base_path,
                 f'{self._dataset_save_name}_{self._target_class}_hm_dataset.pt',
             )
-        else:
-            return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_hm_dataset.pt')
+        return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_hm_dataset.pt')
 
     def get_vae_save_path(self):
         if self._target_class:
             return os.path.join(self._model_base_path, f'{self._dataset_save_name}_{self._target_class}_hm_vae.pt')
-        else:
-            return os.path.join(self._model_base_path, f'{self._dataset_save_name}_hm_vae.pt')
+        return os.path.join(self._model_base_path, f'{self._dataset_save_name}_hm_vae.pt')
 
     def get_classifier_save_path(self):
         return os.path.join(self._model_base_path, f'{self._dataset_save_name}_classifier.pt')
@@ -60,19 +71,16 @@ class DatasetConfig:
                     transforms.ToTensor(),
                 ]
             )
-        else:
-            raise ValueError(f'No transform for {self.dataset_name}')
+        raise ValueError(f'No transform for {self.dataset_name}')
 
     def get_vae_results_save_path(self):
         self._check_attack_set()
         if self._target_class:
             return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}_scores.pt')
-        else:
-            return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_scores.pt')
+        return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_scores.pt')
 
     def get_vae_figs_save_path(self):
         self._check_attack_set()
         if self._target_class:
             return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}.png')
-        else:
-            return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
+        return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
