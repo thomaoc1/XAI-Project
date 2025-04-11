@@ -8,7 +8,6 @@ from pytorch_grad_cam import GradCAM
 from sklearn.metrics import roc_curve, auc
 from tqdm import tqdm
 
-from src.anomalydetection.train import vae_loss_function
 from src.anomalydetection.vae import CNNVAE
 from src.classification.binary_classifier import BinaryClassifier
 from src.classification.eval import init_dataloader

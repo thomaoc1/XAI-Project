@@ -41,7 +41,7 @@ def create_train_val_split(data_dir, val_dir, n_val_per_class=2500, seed=42):
     print("Remaining images stay in train set.")
 
 def main():
-    data_dir = 'dataset/dogs-vs-cats/train'  # where your cat.#.jpg and dog.#.jpg are
+    data_dir = 'dataset/dogs-vs-cats/train'
     val_dir = 'dataset/dogs-vs-cats/validation'
 
     reorganize_for_imagefolder(data_dir)
