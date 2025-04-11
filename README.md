@@ -48,5 +48,5 @@ The pipeline is as follows:
 This can be done by running the following command 
 
 ```bash
-python -m src.run_full_pipeline <dataset> [--target_class] [--classifier_batch_size] [--vae_batch_size] [--classifier_epochs] [--vae_epochs]
+python -m src.run_full_pipeline <dataset> [--target_class <class>] [--classifier_batch_size <int>] [--vae_batch_size <int>] [--classifier_epochs <int>] [--vae_epochs <int>]
 ```
