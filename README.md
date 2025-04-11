@@ -38,6 +38,23 @@ dataset
     
 Verify using `python verify_dataset.py`
 
+## Reproducing Using Model Weights
+If you have been given the model weights for each model you can create the `model/` directory and move them all into it.
+The directory should look like this: 
+```
+model
+├── deepfake_classifier.pt
+├── deepfake_fake_hm_vae.pt
+├── deepfake_hm_vae.pt
+├── deepfake_real_hm_vae.pt
+├── dogs_vs_cats_cat_hm_vae.pt
+├── dogs_vs_cats_classifier.pt
+├── dogs_vs_cats_dog_hm_vae.pt
+└── dogs_vs_cats_hm_vae.pt
+```
+
+From here you can skip the first step of the pipeline and go straight to generating the heatmaps.
+
 ## Execution
 
 ### Full Pipeline

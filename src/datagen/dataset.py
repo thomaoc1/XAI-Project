@@ -10,6 +10,4 @@ class UnsupervisedHeatmapDataset(Dataset):
         return len(self.heatmaps)
 
     def __getitem__(self, idx):
-        return self.heatmaps[idx].unsqueeze(0)
-
-
+        return self.heatmaps[idx].unsqueeze(0) / 255.0
