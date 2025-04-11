@@ -39,14 +39,71 @@ dataset
 Verify using `python verify_dataset.py`
 
 ## Execution
+
+### Full Pipeline
 The pipeline is as follows:
-1. Train original classifier
+1. Train target classifier
 2. Generate heatmap dataset
 3. Train VAE on heatmap dataset
 4. Evaluate VAE anomaly detection performance
 
-This can be done by running the following command 
+This can be done by running the following command:
 
 ```bash
 python -m src.run_full_pipeline <dataset> [--target_class <class>] [--classifier_batch_size <int>] [--vae_batch_size <int>] [--classifier_epochs <int>] [--vae_epochs <int>]
 ```
+
+### Training/Evaluating the Classifier
+Everything that concerns training the target classifier can be found in the module `src.classification`, the following is a brief description of the contents of the module.
+
+#### src.classification.binary_classifier
+Contains the implementation of the target classifier for both datasets.
+
+#### src.classification.train
+Script used to train the classifier on a given dataset, can be executed as follows: 
+
+```bash
+python -m src.classification.train <dataset> [--epochs <int>] [--batch_size <int>] 
+```
+
+This will save the model weights to the path `model/{dataset}_classifier.pt`
+
+#### src.classification.eval
+Script used to evaluate classification performance of model on a given dataset which can be executed as such:
+```bash
+python -m src.classification.eval <dataset> [--classifier_batch_size <int>] 
+```
+Training the model or adding weights under the path `model/{dataset}_classifier.pt` is a prerequisite to this step.
+
+### Heatmap Generation 
+Everything concerning the heatmap dataset generate can be found in the module `src.datagen`, the following is a brief description of the contents of the module.
+
+#### src.datagen.dataset
+This file contains the PyTorch implementation of the heatmap dataset.
+
+#### src.datagen.generate_dataset
+This script generates the clean heatmaps for a given dataset and optionally a specific class. It is executed as follows: 
+```bash
+python -m src.datagen.generate_dataset <dataset> [--batch_size <int>] [--target_class <class>]
+```
+Training the model or adding weights under the path `model/{dataset}_classifier.pt` is a prerequisite to this step.
+
+### Training/Evaluating the VAE
+Everything that concerns training and evaluating the VAE can be found in the module `src.anomalydetection`, the following is a brief description of the contents of the module.
+
+#### src.anomalydetection.vae
+This file contains the PyTorch implementation of the CNN-VAE which expects a 224x224 input image and outputs the same. 
+
+#### src.anomalydetection.train
+This script allows for the training of the VAE given a dataset and optionally a target class. If you generated a heatmap dataset using a target class then you must ensure that you pass the correct one to this script. It can be run as follows:
+```bash
+python -m src.anomalydetection.train <dataset> [--epochs <int>] [--batch_size <int>] [--target_class <class>]
+```
+Generating a heatmap or copying on to the path `dataset/heatmap/{dataset}_hm_dataset.pt` is a prerequisite to this step.
+
+#### src.anomalydetection.eval_vae
+This script allows for the evaluation of a VAE model given a dataset, an attack (currently only FGSM is permitted), and optionally a target class and attack strength (epsilon). It can be run as follows:
+```bash
+python -m src.anomalydetection.eval_vae <dataset> <attack> [--eps <float>] [--target_class <class>]
+```
+Training a VAE or copying its weights to the path `model/{dataset}_hm_vae.pt` is a prerequisite to this step.
