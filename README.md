@@ -102,8 +102,8 @@ python -m src.anomalydetection.train <dataset> [--epochs <int>] [--batch_size <i
 Generating a heatmap or copying on to the path `dataset/heatmap/{dataset}_hm_dataset.pt` is a prerequisite to this step.
 
 #### src.anomalydetection.eval_vae
-This script allows for the evaluation of a VAE model given a dataset, an attack (currently only FGSM is permitted), and optionally a target class and attack strength (epsilon). It can be run as follows:
+This script allows for the evaluation of a VAE model given a dataset and optionally a target class and attack strength (epsilon). It can be run as follows:
 ```bash
-python -m src.anomalydetection.eval_vae <dataset> <attack> [--eps <float>] [--target_class <class>]
+python -m src.anomalydetection.eval_vae <dataset> [--target_class <class>]
 ```
 Training a VAE or copying its weights to the path `model/{dataset}_hm_vae.pt` is a prerequisite to this step.
