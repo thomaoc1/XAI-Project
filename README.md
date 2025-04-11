@@ -53,7 +53,7 @@ model
 └── dogs_vs_cats_hm_vae.pt
 ```
 
-From here you can skip the first step of the pipeline and go straight to generating the heatmaps (Execution - 2)
+From here you can skip the first step of the pipeline and go straight to generating the heatmaps (Execution - Section 2)
 
 If you also have the heatmaps datasets, copy/move them to the path `dataset/heatmap`. The directory should look like this:
 
@@ -67,7 +67,7 @@ dataset/heatmap
 └── dogs_vs_cats_hm_dataset.pt
 ```
 
-From here you can skip straight to the evaluation of the VAE (Execution - 3)
+From here you can skip straight to the evaluation of the VAE (Execution - Section 3)
 
 ## Execution
 
