@@ -38,3 +38,9 @@ dataset
     
 Verify using `python verify_dataset.py`
 
+## Execution
+The pipeline is as follows:
+1. Train original classifier
+2. Generate heatmap dataset
+3. Train VAE on heatmap dataset
+4. Evaluate VAE anomaly detection performance
