@@ -44,3 +44,9 @@ The pipeline is as follows:
 2. Generate heatmap dataset
 3. Train VAE on heatmap dataset
 4. Evaluate VAE anomaly detection performance
+
+This can be done by running the following command 
+
+```bash
+python -m src.run_full_pipeline <dataset> [--target_class] [--classifier_batch_size] [--vae_batch_size] [--classifier_epochs] [--vae_epochs]
+```
