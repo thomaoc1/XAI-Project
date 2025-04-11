@@ -2,6 +2,9 @@ import os
 import shutil
 import random
 
+from src.config import DatasetConfig
+
+
 def is_valid_imagefolder(root_dir, classes):
     return all(
         os.path.isdir(os.path.join(root_dir, cls)) and
@@ -14,7 +17,7 @@ def reorganize_for_imagefolder(root_dir):
 
     if is_valid_imagefolder(root_dir, classes):
         print(f"{root_dir} already organized in ImageFolder format.")
-        return True  # already organized
+        return True
 
     print(f"Reorganizing {root_dir} into ImageFolder format...")
     for cls in classes:
@@ -27,7 +30,7 @@ def reorganize_for_imagefolder(root_dir):
             src = os.path.join(root_dir, filename)
             dst = os.path.join(root_dir, label, filename)
             shutil.move(src, dst)
-    return False  # reorganization done
+    return False
 
 def create_train_val_split(data_dir, val_dir, n_val_per_class=2500, seed=42):
     random.seed(seed)
@@ -35,7 +38,7 @@ def create_train_val_split(data_dir, val_dir, n_val_per_class=2500, seed=42):
 
     if is_valid_imagefolder(val_dir, classes):
         print(f"{val_dir} already contains validation data in ImageFolder format.")
-        return True  # validation already exists
+        return True
 
     print(f"Creating validation split in {val_dir}...")
     os.makedirs(val_dir, exist_ok=True)
@@ -61,12 +64,15 @@ def create_train_val_split(data_dir, val_dir, n_val_per_class=2500, seed=42):
             shutil.move(src_path, dst_path)
 
     print(f"Validation set created: {n_val_per_class} images per class (if available).")
-    return False  # split done
+    return False
 
 def main():
     data_dir = 'dataset/dogs-vs-cats/train'
     val_dir = 'dataset/dogs-vs-cats/validation'
     classes = ['cat', 'dog']
+
+    # Lazy required dir creation
+    DatasetConfig('deepfake')
 
     already_train_ok = reorganize_for_imagefolder(data_dir)
     already_val_ok = is_valid_imagefolder(val_dir, classes)
