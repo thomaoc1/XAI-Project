@@ -21,7 +21,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    config = DatasetConfig(args.dataset, target_class=args.target_class)
+    config = DatasetConfig(args.dataset, target_class=args.target_class, attack_name='FGSM')
 
     print("==== 1. Training Classifier ====")
     train_classifier.main(
