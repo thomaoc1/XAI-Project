@@ -48,6 +48,3 @@ if __name__ == '__main__':
     eval_vae.main(
         cfg=config,
     )
-
-    import torch
-    torch.tensor([1, 255, 3], dtype=torch.int8)
