@@ -163,8 +163,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Adversarial Detection using VAE ELBO Scores")
 
     parser.add_argument("dataset", type=str, choices=["deepfake", "dogs-vs-cats"])
-    parser.add_argument("attack", type=str, choices=["FGSM"])
-    parser.add_argument("--eps", type=float, default=0.03)
     parser.add_argument('--target_class', type=str, default=None, choices=['fake', 'real', 'cat', 'dog'])
 
     return parser.parse_args()
@@ -173,7 +171,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    config = DatasetConfig(args.dataset, attack_name=args.attack, target_class=args.target_class)
+    config = DatasetConfig(args.dataset, attack_name='FGSM', target_class=args.target_class)
 
     main(
         cfg=config,
