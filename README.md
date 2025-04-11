@@ -38,7 +38,7 @@ dataset
     
 Verify using `python verify_dataset.py`
 
-## Reproducing Using Model Weights
+## Reproducing Using Model Weights and Heatmaps Datasets
 If you have been given the model weights for each model you can create the `model/` directory and move them all into it.
 The directory should look like this: 
 ```
@@ -53,7 +53,21 @@ model
 └── dogs_vs_cats_hm_vae.pt
 ```
 
-From here you can skip the first step of the pipeline and go straight to generating the heatmaps.
+From here you can skip the first step of the pipeline and go straight to generating the heatmaps (Execution - 2)
+
+If you also have the heatmaps datasets, copy/move them to the path `dataset/heatmap`. The directory should look like this:
+
+```
+dataset/heatmap
+├── deepfake_fake_hm_dataset.pt
+├── deepfake_hm_dataset.pt
+├── deepfake_real_hm_dataset.pt
+├── dogs_vs_cats_cat_hm_dataset.pt
+├── dogs_vs_cats_dog_hm_dataset.pt
+└── dogs_vs_cats_hm_dataset.pt
+```
+
+From here you can skip straight to the evaluation of the VAE (Execution - 3)
 
 ## Execution
 
@@ -70,7 +84,7 @@ This can be done by running the following command:
 python -m src.run_full_pipeline <dataset> [--target_class <class>] [--classifier_batch_size <int>] [--vae_batch_size <int>] [--classifier_epochs <int>] [--vae_epochs <int>]
 ```
 
-### Training/Evaluating the Classifier
+### 1. Training/Evaluating the Classifier
 Everything that concerns training the target classifier can be found in the module `src.classification`, the following is a brief description of the contents of the module.
 
 #### src.classification.binary_classifier
@@ -92,7 +106,7 @@ python -m src.classification.eval <dataset> [--classifier_batch_size <int>]
 ```
 Training the model or adding weights under the path `model/{dataset}_classifier.pt` is a prerequisite to this step.
 
-### Heatmap Generation 
+### 2. Heatmap Generation 
 Everything concerning the heatmap dataset generate can be found in the module `src.datagen`, the following is a brief description of the contents of the module.
 
 #### src.datagen.dataset
@@ -105,7 +119,7 @@ python -m src.datagen.generate_dataset <dataset> [--batch_size <int>] [--target_
 ```
 Training the model or adding weights under the path `model/{dataset}_classifier.pt` is a prerequisite to this step.
 
-### Training/Evaluating the VAE
+### 3. Training/Evaluating the VAE
 Everything that concerns training and evaluating the VAE can be found in the module `src.anomalydetection`, the following is a brief description of the contents of the module.
 
 #### src.anomalydetection.vae
