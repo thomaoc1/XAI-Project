@@ -57,7 +57,7 @@ def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
         for img, label in tqdm(loader, desc="Processing batches", unit="batch"):
             img, label = img.to(device), label.to(device)
             grayscale_cam = cam(input_tensor=img)
-            batch_heatmaps = (torch.tensor(grayscale_cam) * 255.0).byte()
+            batch_heatmaps = torch.tensor(grayscale_cam)
             heatmaps.append(batch_heatmaps)
 
     torch.save(
