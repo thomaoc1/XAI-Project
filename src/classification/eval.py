@@ -27,7 +27,6 @@ def main(cfg: DatasetConfig, batch_size: int):
         transform=cfg.get_classifier_transform(),
         pin_memory=device == 'cuda',
         shuffle=False,
-        target_class_name=cfg.target_class,
     )
 
     total_loss = 0.0

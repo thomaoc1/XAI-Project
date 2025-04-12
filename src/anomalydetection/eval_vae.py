@@ -10,8 +10,8 @@ from tqdm import tqdm
 
 from src.anomalydetection.vae import CNNVAE
 from src.classification.binary_classifier import BinaryClassifier
-from src.classification.eval import init_dataloader
 from src.config import DatasetConfig
+from src.util import init_dataloader
 
 
 def compute_vae_loss_keep_dims(recon, x, mu, logvar):
@@ -108,7 +108,8 @@ def main(cfg: DatasetConfig):
         path=cfg.get_classifier_dataset_split('validation'),
         transform=cfg.get_classifier_transform(),
         pin_memory=device == 'cuda',
-
+        shuffle=False,
+        target_class_name=cfg.target_class,
     )
 
     model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())

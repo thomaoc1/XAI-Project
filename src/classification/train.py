@@ -3,23 +3,13 @@ import argparse
 import torch
 import torch.nn.functional as F
 import tqdm
+from sklearn.utils import shuffle
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 
 from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
-
-
-def init_dataloader(dataset_path: str, batch_size: int, nw: int, transform, pin_memory: bool):
-    dataset = ImageFolder(dataset_path, transform=transform)
-    loader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        num_workers=nw,
-        shuffle=True,
-        pin_memory=pin_memory
-    )
-    return loader
+from src.util import init_dataloader
 
 
 def main(cfg: DatasetConfig, num_epochs: int, batch_size: int):
@@ -31,7 +21,8 @@ def main(cfg: DatasetConfig, num_epochs: int, batch_size: int):
         batch_size,
         num_workers,
         pin_memory=device == 'cuda',
-        transform=cfg.get_classifier_transform()
+        transform=cfg.get_classifier_transform(),
+        shuffle=True,
     )
 
     model = BinaryClassifier().to(device)
