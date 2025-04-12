@@ -108,6 +108,7 @@ def main(cfg: DatasetConfig):
         path=cfg.get_classifier_dataset_split('validation'),
         transform=cfg.get_classifier_transform(),
         pin_memory=device == 'cuda',
+
     )
 
     model, vae_model = init_models(device, cfg.get_classifier_save_path(), cfg.get_vae_save_path())
