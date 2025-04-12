@@ -84,3 +84,9 @@ class DatasetConfig:
         if self._target_class:
             return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}.png')
         return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
+
+    def get_classes(self):
+        if self.dataset_name == 'deepfake':
+            return ["Fake", "Real"]
+        else:
+            return ["Cat", "Dog"]

@@ -55,7 +55,7 @@ def main(cfg: DatasetConfig, batch_size: int):
             all_labels.extend(label.cpu().numpy())
             all_preds.extend(predicted.cpu().numpy())
 
-    print(classification_report(all_labels, all_preds, target_names=["Fake", "Real"]))
+    print(classification_report(all_labels, all_preds, target_names=cfg.get_classes(), digits=2))
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Evaluate Classifier")
