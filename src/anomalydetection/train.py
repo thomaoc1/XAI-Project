@@ -43,9 +43,10 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
         pin_memory=device == 'cuda',
     )
 
-    for epoch in tqdm(range(n_epochs), desc="Epochs", leave=False):
+    for epoch in range(n_epochs):
         epoch_loss = 0.0
-        for hm in loader:
+        loader_bar = tqdm(loader, desc=f"Epoch {epoch + 1}/{n_epochs}", leave=False)
+        for hm in loader_bar:
             hm = hm.to(device)
             optimizer.zero_grad()
             recon_x, mu, logvar = vae(hm)
