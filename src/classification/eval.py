@@ -9,12 +9,7 @@ from sklearn.metrics import classification_report
 
 from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
-
-
-def init_dataloader(path: str, batch_size: int, nw: int, transform, pin_memory: bool):
-    dataset = ImageFolder(path, transform=transform)
-    loader = DataLoader(dataset, batch_size=batch_size, num_workers=nw, shuffle=False, pin_memory=pin_memory)
-    return loader
+from src.util import init_dataloader
 
 
 def main(cfg: DatasetConfig, batch_size: int):
@@ -30,7 +25,9 @@ def main(cfg: DatasetConfig, batch_size: int):
         batch_size=batch_size,
         nw=num_workers,
         transform=cfg.get_classifier_transform(),
-        pin_memory=device == 'cuda'
+        pin_memory=device == 'cuda',
+        shuffle=False,
+        target_class_name=cfg.target_class,
     )
 
     total_loss = 0.0

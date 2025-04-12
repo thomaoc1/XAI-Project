@@ -9,7 +9,7 @@ class DatasetConfig:
         assert not target_class or target_class in ['real', 'fake', 'dog', 'cat']
 
         self.dataset_name = dataset_name
-        self._target_class = target_class.lower() if target_class else target_class
+        self.target_class = target_class.lower() if target_class else target_class
         self.attack_name = attack_name.lower() if attack_name else attack_name
         self._dataset_save_name = dataset_name.replace('-', '_')
         self._dataset_base_path = 'dataset'
@@ -36,16 +36,16 @@ class DatasetConfig:
             raise ValueError('No attack set')
 
     def get_heatmap_dataset_path(self):
-        if self._target_class:
+        if self.target_class:
             return os.path.join(
                 self._heatmap_dataset_base_path,
-                f'{self._dataset_save_name}_{self._target_class}_hm_dataset.pt',
+                f'{self._dataset_save_name}_{self.target_class}_hm_dataset.pt',
             )
         return os.path.join(self._heatmap_dataset_base_path, f'{self._dataset_save_name}_hm_dataset.pt')
 
     def get_vae_save_path(self):
-        if self._target_class:
-            return os.path.join(self._model_base_path, f'{self._dataset_save_name}_{self._target_class}_hm_vae.pt')
+        if self.target_class:
+            return os.path.join(self._model_base_path, f'{self._dataset_save_name}_{self.target_class}_hm_vae.pt')
         return os.path.join(self._model_base_path, f'{self._dataset_save_name}_hm_vae.pt')
 
     def get_classifier_save_path(self):
@@ -75,14 +75,14 @@ class DatasetConfig:
 
     def get_vae_results_save_path(self):
         self._check_attack_set()
-        if self._target_class:
-            return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}_scores.pt')
+        if self.target_class:
+            return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_{self.target_class}_scores.pt')
         return os.path.join(self._results_base_path, f'{self._dataset_save_name}_{self.attack_name}_scores.pt')
 
     def get_vae_figs_save_path(self):
         self._check_attack_set()
-        if self._target_class:
-            return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}_{self._target_class}.png')
+        if self.target_class:
+            return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}_{self.target_class}.png')
         return os.path.join(self._results_base_path, 'figs', f'{self._dataset_save_name}_{self.attack_name}.png')
 
     def get_classes(self):
