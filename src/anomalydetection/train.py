@@ -43,7 +43,7 @@ def main(cfg: DatasetConfig, n_epochs: int, batch_size: int):
         pin_memory=device == 'cuda',
     )
 
-    for epoch in tqdm(range(n_epochs), desc="Epochs"):
+    for epoch in tqdm(range(n_epochs), desc="Epochs", leave=False):
         epoch_loss = 0.0
         for hm in loader:
             hm = hm.to(device)
