@@ -1,6 +1,6 @@
 # XAI-Project
 ## Venv
-Project was completed using Python version 3.10
+Project was completed using Python version 3.10.16
 ```
 python -m venv venv  
 source venv/bin/activate  
