@@ -39,7 +39,7 @@ dataset
 Verify using `python verify_dataset.py`
 
 ## Reproducing Using Model Weights and Heatmaps Datasets
-If you have been given the model weights for each model you can create the `model/` directory and move them all into it.
+If you have been given the model weights for each model you can create the `model/` directory at the project root and move them all into it.
 The directory should look like this: 
 ```
 model
