@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 class UnsupervisedHeatmapDataset(Dataset):
     def __init__(self, heatmaps: torch.Tensor):
         self.heatmaps = heatmaps
-        self._is_normalised = heatmaps.max().item() <= 1.0
+        self._is_normalised = heatmaps.max().item() <= 1.0 + 1e-5
 
     def __len__(self):
         return len(self.heatmaps)
