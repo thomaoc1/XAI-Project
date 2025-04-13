@@ -13,6 +13,7 @@ dataset
 ├── dogs-vs-cats
 └── deepfake-dataset
 ```
+Ensure all files contained in the directories are unzipped (Dogs vs Cats particularly).
 
 Next format the datasets by running `python format_datasets.py`
 
