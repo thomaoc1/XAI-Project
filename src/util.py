@@ -1,3 +1,5 @@
+from typing import Optional
+
 import torch
 from torch.utils.data import Subset, DataLoader
 from torchvision.datasets import ImageFolder
@@ -13,7 +15,7 @@ def init_dataloader(
         transform,
         pin_memory: bool,
         shuffle: bool,
-        target_class_name: str | None = None
+        target_class_name: Optional[str] = None
 ):
     dataset = ImageFolder(path, transform=transform)
 

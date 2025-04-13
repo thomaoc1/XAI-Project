@@ -1,4 +1,5 @@
 import argparse
+from typing import Optional
 
 import torch
 from pytorch_grad_cam import GradCAM
@@ -7,12 +8,11 @@ from torch.utils.data import Subset, DataLoader
 from torchvision.datasets import ImageFolder
 from tqdm import tqdm
 
-from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
 from src.util import init_dataloader, load_classifier
 
 
-def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
+def main(cfg: DatasetConfig, batch_size: int, target_class_name: Optional[str]):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
 
