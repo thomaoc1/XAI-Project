@@ -38,7 +38,7 @@ dataset
     
 Verify using `python verify_dataset.py`
 
-## Reproducing Using Model Weights and Heatmaps Datasets
+## Reproducing Using Model Weights
 If you have been given the model weights for each model you can create the `model/` directory at the project root and move them all into it.
 The directory should look like this: 
 ```
@@ -51,20 +51,6 @@ model
 ├── dogs_vs_cats_classifier.pt
 ├── dogs_vs_cats_dog_hm_vae.pt
 └── dogs_vs_cats_hm_vae.pt
-```
-
-From here you can skip the first step of the pipeline and go straight to generating the heatmaps (Execution - Section 2)
-
-If you also have the heatmaps datasets, copy/move them to the path `dataset/heatmap`. The directory should look like this:
-
-```
-dataset/heatmap
-├── deepfake_fake_hm_dataset.pt
-├── deepfake_hm_dataset.pt
-├── deepfake_real_hm_dataset.pt
-├── dogs_vs_cats_cat_hm_dataset.pt
-├── dogs_vs_cats_dog_hm_dataset.pt
-└── dogs_vs_cats_hm_dataset.pt
 ```
 
 From here you can skip straight to the evaluation of the VAE (Execution - Section 3)
