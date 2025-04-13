@@ -1,5 +1,9 @@
+import torch
 from torch.utils.data import Subset, DataLoader
 from torchvision.datasets import ImageFolder
+
+from src.classification.binary_classifier import BinaryClassifier
+from src.config import DatasetConfig
 
 
 def init_dataloader(
@@ -25,3 +29,9 @@ def init_dataloader(
         pin_memory=pin_memory,
         shuffle=shuffle,
     )
+
+def load_classifier(classifier_path: str, device: str):
+    model = BinaryClassifier().to(device)
+    model.load_state_dict(torch.load(classifier_path, map_location=device, weights_only=True))
+    model.eval()
+    return model

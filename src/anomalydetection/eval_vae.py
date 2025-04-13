@@ -11,7 +11,7 @@ from tqdm import tqdm
 from src.anomalydetection.vae import CNNVAE
 from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
-from src.util import init_dataloader
+from src.util import init_dataloader, load_classifier
 
 
 def compute_vae_loss_keep_dims(recon, x, mu, logvar):
@@ -24,6 +24,7 @@ def init_models(device: str, classifier_path: str, vae_model_path: str):
     classifier = BinaryClassifier().to(device)
     classifier.load_state_dict(torch.load(classifier_path, map_location=device, weights_only=True))
     classifier.eval()
+    classifier = load_classifier(classifier_path, device)
 
     vae_model = CNNVAE().to(device)
     vae_model.load_state_dict(torch.load(vae_model_path, map_location=device, weights_only=True))

@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
-from src.util import init_dataloader
+from src.util import init_dataloader, load_classifier
 
 
 def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
@@ -26,10 +26,7 @@ def main(cfg: DatasetConfig, batch_size: int, target_class_name: str | None):
         shuffle=False,
     )
 
-    model = BinaryClassifier()
-    model.load_state_dict(torch.load(cfg.get_classifier_save_path(), map_location=device, weights_only=True))
-    model.eval()
-
+    model = load_classifier(cfg.get_classifier_save_path(), device)
     target_layers = [model.backbone.layer4[-1]]
 
     heatmaps = []

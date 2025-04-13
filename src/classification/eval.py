@@ -9,16 +9,13 @@ from sklearn.metrics import classification_report
 
 from src.classification.binary_classifier import BinaryClassifier
 from src.config import DatasetConfig
-from src.util import init_dataloader
+from src.util import init_dataloader, load_classifier
 
 
 def main(cfg: DatasetConfig, batch_size: int):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     num_workers = 4 if device == 'cuda' else 0
-
-    model = BinaryClassifier().to(device)
-    model.load_state_dict(torch.load(cfg.get_classifier_save_path(), map_location=device, weights_only=True))
-    model.eval()
+    model = load_classifier(cfg.get_classifier_save_path(), device)
 
     loader = init_dataloader(
         cfg.get_classifier_dataset_split('validation'),
